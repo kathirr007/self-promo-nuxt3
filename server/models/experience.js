@@ -1,5 +1,6 @@
-const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
+import mongoose from 'mongoose'
+
+const Schema = mongoose.Schema
 
 const experienceSchema = new Schema({
   slug: { type: String, unique: true, sparse: true },
@@ -11,10 +12,12 @@ const experienceSchema = new Schema({
   featured: { type: Boolean, default: false },
   status: {
     type: String,
-    enum: ["active", "inactive", "deleted", "published"],
-    default: "active"
+    enum: ['active', 'inactive', 'deleted', 'published'],
+    default: 'active',
   },
-  author: { type: Schema.Types.ObjectId, ref: "User" }
-});
+  author: { type: Schema.Types.ObjectId, ref: 'User' },
+})
 
-module.exports = mongoose.model("Experience", experienceSchema);
+const ExperienceModel = mongoose.model('Experience', experienceSchema)
+
+export default { ExperienceModel }
