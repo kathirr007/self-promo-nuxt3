@@ -1,9 +1,46 @@
-import ProductModel from '@/server/models/product'
+import type { Product } from '../models/types/product'
 import slugify from 'slugify'
+import ExperienceModel from '~/server/models/experience'
+import ProductModel from '~/server/models/product'
+import ProjectModel from '~/server/models/project'
+import CategoryModel from '../models/category'
+import UserModel from '../models/user'
 import { deleteImage, deleteImages } from './upload-photo'
 
-export const getProducts = function (req, res) {
-  ProductModel.find({ status: 'published' })
+export async function getProducts(): Promise<Product[]> {
+  // let data: any
+  return await ProductModel.find({ status: 'published' })
+    .populate('category', '_id name', CategoryModel)
+    .populate('author', '_id -_id -password -products -email -role', UserModel)
+    .sort({ updatedAt: -1 })
+    .exec()
+    // .then((products) => {
+    //   console.log('projects: ', products)
+    //   data = products
+    // })
+    // .catch((err) => {
+    //   throw new Error(err)
+    // })
+  // return data
+  /* await ProductModel.find({})
+    // .populate('author -_id -password -products -email -role')
+    // .populate('category')
+    // .populate('cuid', 'uid avatar name', CategoryModel)
+    .populate('_id', 'password products email role', UserModel)
+    .populate('_id', 'category', CategoryModel)
+    .sort({ updatedAt: -1 })
+    .exec()
+    .then((products) => {
+      data = products
+    })
+    .catch((err) => {
+      throw new Error(err)
+    })
+  return data */
+}
+
+/* export const getProducts = async function () {
+  ProjectModel.find({ status: 'published' })
     .populate('author -_id -password -products -email -role')
     .populate('category')
     .sort({ updatedAt: -1 })
@@ -19,7 +56,7 @@ export const getProducts = function (req, res) {
 export const getAdminProducts = function (req, res) {
   const userId = req.user.id
 
-  ProductModel.find({ author: userId })
+  ProjectModel.find({ author: userId })
     .populate('author')
     .sort({ updatedAt: -1 })
     .exec((errors, products) => {
@@ -34,7 +71,7 @@ export const getAdminProducts = function (req, res) {
 export function getProductById(req, res) {
   const id = req.params.id
 
-  ProductModel.findById(id)
+  ProjectModel.findById(id)
     .populate('category')
     .exec((errors, product) => {
       if (errors) {
@@ -48,7 +85,7 @@ export function getProductById(req, res) {
 export function getProductBySlug(req, res) {
   const slug = req.params.slug
 
-  ProductModel.findOne({ slug })
+  ProjectModel.findOne({ slug })
     .populate('author -_id -password -products -email -role')
     .exec((errors, product) => {
       if (errors) {
@@ -96,7 +133,7 @@ export const updateProduct = function (req, res) {
   //   subtitle: req.body.subtitle,
   //   description: req.body.description,
   //   price: req.body.price,
-  //   productLink: req.body.productLink,
+  //   projectLink: req.body.projectLink,
   //   promoVideoLink: req.body.promoVideoLink,
   //   createdAt: req.body.createdAt,
   //   updatedAt: req.body.updatedAt,
@@ -121,7 +158,7 @@ export const updateProduct = function (req, res) {
   productData.wsl = JSON.parse(productData.wsl)
   productData.updatedAt = Date.now()
 
-  ProductModel.findById(productId)
+  ProjectModel.findById(productId)
     .populate('category')
     .exec((errors, product) => {
       if (errors) {
@@ -152,7 +189,7 @@ export const deleteProduct = async function (req, res) {
   const productId = req.params.id
 
   try {
-    const deletedProduct = await ProductModel.deleteOne(
+    const deletedProduct = await ProjectModel.deleteOne(
       {
         _id: productId,
       },
@@ -200,4 +237,4 @@ export const deleteProductImage = async function (req, res) {
       message: err.message,
     })
   }
-}
+} */

@@ -1,17 +1,17 @@
-import { compare, genSalt, hash } from 'bcryptjs'
-import mongoose from 'mongoose'
+import type { User } from './types/user'
+// import { compare, genSalt, hash } from 'bcryptjs'
+import * as Bcrypt from 'bcryptjs'
+import { model, Schema } from 'mongoose'
 
-const Schema = mongoose.Schema
+// const Schema = mongoose.Schema
 
-const userSchema = new Schema({
+const userSchema = new Schema<User>({
   avatar: String,
   email: {
     type: String,
-    required: 'Email is Required',
+    required: true,
     lowercase: true,
     unique: true,
-    // eslint-disable-next-line regexp/no-super-linear-backtracking
-    match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})$/],
   },
   name: {
     type: String,
@@ -27,7 +27,7 @@ const userSchema = new Schema({
     type: String,
     minlength: [4, 'Too short, min is 4 characters'],
     maxlength: [32, 'Too long, max is 32 characters'],
-    required: 'Password is required',
+    required: true,
   },
   // Very simplified you should have separate collection with roles
   // You can create also array of roles in case of multiple roles
@@ -44,14 +44,15 @@ const userSchema = new Schema({
 })
 
 userSchema.pre('save', function (next) {
+  // eslint-disable-next-line ts/no-this-alias
   const user = this
 
-  genSalt(10, (err, salt) => {
+  Bcrypt.genSalt(10, (err, salt) => {
     if (err) {
       return next(err)
     }
 
-    hash(user.password, salt, (err, hash) => {
+    Bcrypt.hash(user.password, salt, (err, hash) => {
       if (err) {
         return next(err)
       }
@@ -62,10 +63,10 @@ userSchema.pre('save', function (next) {
   })
 })
 
-// Every user have acces to this methods
-userSchema.methods.comparePassword = function (candidatePassword, callback) {
+// Every user have access to this methods
+userSchema.methods.comparePassword = function (candidatePassword: string, callback: (...args: any) => void) {
   // debugger;
-  compare(candidatePassword, this.password, (err, isMatch) => {
+  Bcrypt.compare(candidatePassword, this.password, (err, isMatch) => {
     if (err) {
       return callback(err)
     }
@@ -75,6 +76,6 @@ userSchema.methods.comparePassword = function (candidatePassword, callback) {
   })
 }
 
-const UserModel = mongoose.model('User', userSchema)
+const UserModel = model('User', userSchema)
 
 export default UserModel

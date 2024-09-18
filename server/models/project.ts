@@ -1,8 +1,9 @@
+import type { Project } from './types/project'
 import mongoose from 'mongoose'
 
 const Schema = mongoose.Schema
 
-const productSchema = new Schema({
+const projectSchema = new Schema<Project>({
   slug: { type: String, unique: true, sparse: true },
   title: { type: String, required: true },
   subtitle: String,
@@ -16,7 +17,7 @@ const productSchema = new Schema({
   wsl: [{ type: Schema.Types.Mixed, value: String }],
   requirements: [{ type: Schema.Types.Mixed, value: String }],
   promoVideoLink: String,
-  productLink: String,
+  projectLink: String,
   // githubLink: String,
   price: Number,
   discountedPrice: Number,
@@ -31,6 +32,18 @@ const productSchema = new Schema({
   author: { type: Schema.Types.ObjectId, ref: 'User' },
 })
 
-const ProductModel = mongoose.model('Product', productSchema)
+projectSchema.virtual('User', {
+  ref: 'User',
+  localField: 'author',
+  foreignField: 'uid',
+})
 
-export default { ProductModel }
+projectSchema.virtual('Category', {
+  ref: 'Category',
+  localField: 'category',
+  foreignField: 'uid',
+})
+
+const ProjectModel = mongoose.model('Project', projectSchema)
+
+export default ProjectModel

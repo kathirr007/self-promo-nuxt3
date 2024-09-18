@@ -6,7 +6,8 @@ export default nuxt(
     formatters: true,
     vue: true,
     rules: {
-      'no-console' : 'off'
-    }
-  })
+      'no-console': 'off',
+      'vue/no-multiple-template-root': 'off',
+    },
+  }),
 )

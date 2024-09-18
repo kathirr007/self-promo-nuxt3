@@ -51,6 +51,9 @@ importers:
       '@iconify/vue':
         specifier: ^4.1.2
         version: 4.1.2(vue@3.5.5(typescript@5.6.2))
+      '@types/bcryptjs':
+        specifier: ^2.4.6
+        version: 2.4.6
       '@vueuse/core':
         specifier: ^11.0.3
         version: 11.0.3(vue@3.5.5(typescript@5.6.2))
@@ -1235,6 +1238,9 @@ packages:
   '@trysound/sax@0.2.0':
     resolution: {integrity: sha512-L7z9BgrNEcYyUYtF+HaEfiS5ebkh9jXqbszz7pC0hRBPaatV0XjSD3+eHrpqFemQfgwiFF0QPIarnIihIDn7OA==}
     engines: {node: '>=10.13.0'}
+
+  '@types/bcryptjs@2.4.6':
+    resolution: {integrity: sha512-9xlo6R2qDs5uixm0bcIqCeMCE6HiQsIyel9KQySStiyqNl2tnj2mP3DX1Nf56MD6KMenNNlBBsy3LJ7gUEQPXQ==}
 
   '@types/debug@4.1.12':
     resolution: {integrity: sha512-vIChWdVG3LG1SMxEvI/AK+FWJthlrqlTu7fbrlywTkkaONwk/UAGaULXRlf8vkzFBLVm0zkMdCquhL5aOjhXPQ==}
@@ -6021,6 +6027,8 @@ snapshots:
       - typescript
 
   '@trysound/sax@0.2.0': {}
+
+  '@types/bcryptjs@2.4.6': {}
 
   '@types/debug@4.1.12':
     dependencies:

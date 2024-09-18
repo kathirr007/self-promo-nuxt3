@@ -1,8 +1,9 @@
+import type { Experience } from './types/experience'
 import mongoose from 'mongoose'
 
 const Schema = mongoose.Schema
 
-const experienceSchema = new Schema({
+const experienceSchema = new Schema<Experience>({
   slug: { type: String, unique: true, sparse: true },
   title: { type: String, maxlength: 96 },
   subtitle: { type: String },
@@ -20,4 +21,4 @@ const experienceSchema = new Schema({
 
 const ExperienceModel = mongoose.model('Experience', experienceSchema)
 
-export default { ExperienceModel }
+export default ExperienceModel
