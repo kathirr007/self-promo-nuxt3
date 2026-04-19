@@ -1,11 +1,7 @@
-import type { Product } from '../models/types/product'
-import slugify from 'slugify'
-import ExperienceModel from '~/server/models/experience'
-import ProductModel from '~/server/models/product'
-import ProjectModel from '~/server/models/project'
-import CategoryModel from '../models/category'
-import UserModel from '../models/user'
-import { deleteImage, deleteImages } from './upload-photo'
+import type { Product } from '~~/server/models/types/product'
+import CategoryModel from '~~/server/models/category'
+import ProductModel from '~~/server/models/product'
+import UserModel from '~~/server/models/user'
 
 export async function getProducts(): Promise<Product[]> {
   // let data: any

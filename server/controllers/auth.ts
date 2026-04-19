@@ -1,4 +1,4 @@
-export const onlyAuthUser = function (req, res, next) {
+export function onlyAuthUser(req, res, next) {
   // console.log(req)
   // debugger;
   if (req.isAuthenticated()) {
@@ -8,7 +8,7 @@ export const onlyAuthUser = function (req, res, next) {
   return res.status(401).send({ errors: { auth: 'Not Authenticated!' } })
 }
 
-export const onlyAdmin = function (req, res, next) {
+export function onlyAdmin(req, res, next) {
   const user = req.user
   // debugger
   if (user && user.role === 'admin') {

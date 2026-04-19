@@ -3,14 +3,20 @@ import mongoose from 'mongoose'
 
 const Schema = mongoose.Schema
 
-const productHeroSchema = new Schema<ProjectHero>({
-  product: { type: Schema.Types.ObjectId, ref: 'Product' },
+const projectHeroSchema = new Schema<ProjectHero>({
+  project: { type: Schema.Types.ObjectId, ref: 'Project' },
   image: String,
   title: String,
   subtitle: String,
   createdAt: { type: Date, default: Date.now },
 })
 
-const ProductHeroModel = mongoose.model('ProductHero', productHeroSchema)
+projectHeroSchema.virtual('Project', {
+  ref: 'Project',
+  localField: 'project',
+  foreignField: 'uid',
+})
 
-export default { ProductHeroModel }
+const ProjectHeroModel = mongoose.model('ProjectHero', projectHeroSchema)
+
+export default ProjectHeroModel

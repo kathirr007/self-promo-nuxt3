@@ -1,11 +1,14 @@
+import type { Document } from 'mongoose'
 import type { User } from './types/user'
-// import { compare, genSalt, hash } from 'bcryptjs'
 import * as Bcrypt from 'bcryptjs'
 import { model, Schema } from 'mongoose'
 
-// const Schema = mongoose.Schema
+// Define interface that extends Document for proper typing
+interface IUser extends User, Document {
+  comparePassword: (candidatePassword: string) => Promise<boolean>
+}
 
-const userSchema = new Schema<User>({
+const userSchema = new Schema<IUser>({
   avatar: String,
   email: {
     type: String,
@@ -29,53 +32,32 @@ const userSchema = new Schema<User>({
     maxlength: [32, 'Too long, max is 32 characters'],
     required: true,
   },
-  // Very simplified you should have separate collection with roles
-  // You can create also array of roles in case of multiple roles
   role: {
-    enum: ['guest', 'admin'],
     type: String,
+    enum: ['guest', 'admin'],
     required: true,
     default: 'guest',
   },
   info: String,
-  products: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
+  projects: [{ type: Schema.Types.ObjectId, ref: 'Project' }],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 })
 
-userSchema.pre('save', function (next) {
-  // eslint-disable-next-line ts/no-this-alias
-  const user = this
+// Convert pre-save hook to use async/await for better error handling
+userSchema.pre('save', async function () {
+  if (!this.isModified('password'))
+    return
 
-  Bcrypt.genSalt(10, (err, salt) => {
-    if (err) {
-      return next(err)
-    }
-
-    Bcrypt.hash(user.password, salt, (err, hash) => {
-      if (err) {
-        return next(err)
-      }
-
-      user.password = hash
-      next()
-    })
-  })
+  const salt = await Bcrypt.genSalt(10)
+  this.password = await Bcrypt.hash(this.password, salt)
 })
 
-// Every user have access to this methods
-userSchema.methods.comparePassword = function (candidatePassword: string, callback: (...args: any) => void) {
-  // debugger;
-  Bcrypt.compare(candidatePassword, this.password, (err, isMatch) => {
-    if (err) {
-      return callback(err)
-    }
-    else {
-      callback(null, isMatch)
-    }
-  })
+// Convert comparePassword method to return Promise for modern async/await usage
+userSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
+  return await Bcrypt.compare(candidatePassword, this.password)
 }
 
-const UserModel = model('User', userSchema)
+const UserModel = model<IUser>('User', userSchema)
 
 export default UserModel

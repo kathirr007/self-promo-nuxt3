@@ -1,7 +1,7 @@
 import type { ObjectId } from 'mongoose'
 
 export interface ProjectHero {
-  product: ObjectId
+  project: ObjectId
   image: string
   title: string
   subtitle: string

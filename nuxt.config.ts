@@ -1,6 +1,10 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  compatibilityDate: '2024-04-03',
+  compatibilityDate: '2026-04-20',
+  sourcemap: {
+    server: true,
+    client: true,
+  },
   devtools: { enabled: true },
   modules: [
     '@nuxtjs/tailwindcss',
@@ -8,6 +12,7 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     '@nuxt/eslint',
     '@nuxt/icon',
+    'nuxt-auth-utils',
   ],
   runtimeConfig: {
     MONGODB_URL: process.env.DB_URI,
@@ -30,6 +35,14 @@ export default defineNuxtConfig({
   vue: {
     compilerOptions: {
       isCustomElement: tag => tag === 'iconify-icon',
+    },
+  },
+  vite: {
+    optimizeDeps: {
+      include: [
+        '@vue/devtools-core',
+        '@vue/devtools-kit',
+      ],
     },
   },
 })

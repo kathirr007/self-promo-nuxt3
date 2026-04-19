@@ -10,7 +10,7 @@ export interface User {
   // You can create also array of roles in case of multiple roles
   role: string
   info: string
-  products: Schema.Types.ObjectId[]
+  projects: Schema.Types.ObjectId[]
   createdAt: Date
   updatedAt: Date
 }

@@ -19,6 +19,12 @@ const experienceSchema = new Schema<Experience>({
   author: { type: Schema.Types.ObjectId, ref: 'User' },
 })
 
+experienceSchema.virtual('User', {
+  ref: 'User',
+  localField: 'author',
+  foreignField: 'uid',
+})
+
 const ExperienceModel = mongoose.model('Experience', experienceSchema)
 
 export default ExperienceModel

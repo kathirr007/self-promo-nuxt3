@@ -8,6 +8,8 @@ export default nuxt(
     rules: {
       'no-console': 'off',
       'vue/no-multiple-template-root': 'off',
+      'unused-imports/no-unused-vars': 'off',
+      'node/prefer-global/process': 'off',
     },
   }),
 )
