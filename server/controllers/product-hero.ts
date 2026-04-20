@@ -77,7 +77,7 @@ exports.deleteProductHero = async function (req, res, next) {
   }
 } */
 
-// import type { H3Event } from 'h3'
+import type { H3Event } from 'h3'
 import type { ProjectHero } from '~~/server/models/types/project-hero'
 // import { HTTPError } from 'h3'
 import ProjectHeroModel from '~~/server/models/project-hero'
@@ -110,7 +110,7 @@ export async function getProductHeroes(event: H3Event) {
   }
 }
 
-export async function updateProductHeroes(event: H3Event) {
+export async function updateProductHero(event: H3Event) {
   try {
     const id = getRouterParam(event, 'id')
 
@@ -132,7 +132,7 @@ export async function updateProductHeroes(event: H3Event) {
   }
 }
 
-export async function deleteProjectHeroModel(event: H3Event) {
+export async function deleteProjectHero(event: H3Event) {
   try {
     const heroId = getRouterParam(event, 'id')
 

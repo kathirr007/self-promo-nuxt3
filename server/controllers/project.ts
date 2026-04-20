@@ -1,7 +1,12 @@
+import type { H3Event } from 'h3'
 import type { Product } from '~~/server/models/types/product'
+import slugify from 'slugify'
+import { deleteImage } from '~~/server/controllers/upload-photo'
 import CategoryModel from '~~/server/models/category'
 import ProductModel from '~~/server/models/product'
+import ProjectModel from '~~/server/models/project'
 import UserModel from '~~/server/models/user'
+import { getRouterParam } from '#imports'
 
 export async function getProducts(): Promise<Product[]> {
   // let data: any
@@ -35,7 +40,7 @@ export async function getProducts(): Promise<Product[]> {
   return data */
 }
 
-/* export const getProducts = async function () {
+/* export async function getProducts() {
   ProjectModel.find({ status: 'published' })
     .populate('author -_id -password -products -email -role')
     .populate('category')
@@ -47,190 +52,89 @@ export async function getProducts(): Promise<Product[]> {
 
       return res.json(products)
     })
-}
+} */
 
-export const getAdminProducts = function (req, res) {
-  const userId = req.user.id
+export async function getAdminProducts(event: H3Event) {
+  const userId = ((await requireUserSession(event)).user as Record<string, any>)._id
 
-  ProjectModel.find({ author: userId })
+  return await ProjectModel.find({ author: userId })
     .populate('author')
     .sort({ updatedAt: -1 })
-    .exec((errors, products) => {
-      if (errors) {
-        return res.status(422).send(errors)
-      }
-
-      return res.json(products)
-    })
+    .exec()
 }
 
-export function getProductById(req, res) {
-  const id = req.params.id
+export async function getProductById(event: H3Event) {
+  const id = getRouterParam(event, 'id')
 
-  ProjectModel.findById(id)
+  return await ProjectModel.findById(id)
     .populate('category')
-    .exec((errors, product) => {
-      if (errors) {
-        return res.status(422).send(errors)
-      }
-
-      return res.json(product)
-    })
+    .exec()
 }
 
-export function getProductBySlug(req, res) {
-  const slug = req.params.slug
+export async function getProductBySlug(event: H3Event) {
+  const slug = getRouterParam(event, 'slug')
 
-  ProjectModel.findOne({ slug })
-    .populate('author -_id -password -products -email -role')
-    .exec((errors, product) => {
-      if (errors) {
-        return res.status(422).send(errors)
-      }
-
-      return res.json(product)
-    })
+  return await ProjectModel.findOne({ slug })
+    .populate('author', '-_id -password -products -email -role')
+    .exec()
 }
 
 // Needs recheck
-export const createProduct = function (req, res) {
-  const productData = req.body
-  const user = req.user
+export async function createProduct(event: H3Event) {
+  const productData = await readBody(event)
+  const { user } = (await requireUserSession(event))
   const product = new ProductModel(productData)
-  product.author = user
+  product.author = (user as Record<string, any>)._id
   product.storageLocation = `projects/${slugify(productData.title, {
-    replacement: '-', // replace spaces with replacement
-    remove: null, // regex to remove characters
-    lower: true, // result in lower case
+    replacement: '-',
+    lower: true,
   })}`
 
-  product.save((errors, createdProduct) => {
-    if (errors) {
-      return res.status(422).send(errors)
-    }
-
-    return res.json(createdProduct)
-  })
+  return await product.save()
 }
 
-export const updateProduct = function (req, res) {
-  // debugger
-  const images = req.files
-    ? req.files.map((file) => {
-      return {
-        location: file.location,
-        size: file.size,
-        originalname: file.originalname,
-      }
-    })
-    : []
-  // let updateQuery = {
-  //   title: req.body.title,
-  //   subtitle: req.body.subtitle,
-  //   description: req.body.description,
-  //   price: req.body.price,
-  //   projectLink: req.body.projectLink,
-  //   promoVideoLink: req.body.promoVideoLink,
-  //   createdAt: req.body.createdAt,
-  //   updatedAt: req.body.updatedAt,
-  //   category: req.body.categoryID,
-  //   category: req.body.categoryID,
-  //   author: req.body.authorID,
-  // }
-  // if(req.files.length !=0) {
-  //     updateQuery.image = req.files[0].location
-  //     updateQuery.images = images
-  // }
-  const productId = req.params.id
-  const productData = req.body
-  if (req.files.length !== 0) {
-    productData.image = req.files[0].location
-    productData.images = images
-  }
-  else {
-    productData.images = JSON.parse(productData.images)
-  }
-  productData.requirements = JSON.parse(productData.requirements)
-  productData.wsl = JSON.parse(productData.wsl)
+export async function updateProduct(event: H3Event) {
+  const productId = getRouterParam(event, 'id')
+  const productData = await readBody(event)
+
+  productData.requirements = typeof productData.requirements === 'string' ? JSON.parse(productData.requirements) : productData.requirements
+  productData.wsl = typeof productData.wsl === 'string' ? JSON.parse(productData.wsl) : productData.wsl
   productData.updatedAt = Date.now()
 
-  ProjectModel.findById(productId)
-    .populate('category')
-    .exec((errors, product) => {
-      if (errors) {
-        return res.status(422).send(errors)
-      }
+  const product = await ProjectModel.findById(productId).populate('category').exec()
+  if (!product)
+    throw createError({ statusCode: 404, message: 'Product not found' })
 
-      // if (productData.status && productData.status === 'published' && !product.slug) {
-      if (productData.status && productData.status === 'published') {
-        product.slug = slugify(product.title, {
-          replacement: '-', // replace spaces with replacement
-          remove: null, // regex to remove characters
-          lower: true, // result in lower case
-        })
-      }
-
-      product.set(productData)
-      product.save((errors, savedProduct) => {
-        if (errors) {
-          return res.status(422).send(errors)
-        }
-
-        return res.json(savedProduct)
-      })
+  if (productData.status && productData.status === 'published') {
+    product.slug = slugify(product.title, {
+      replacement: '-',
+      lower: true,
     })
+  }
+
+  product.set(productData)
+  return await product.save()
 }
 
-export const deleteProduct = async function (req, res) {
-  const productId = req.params.id
-
+export async function deleteProduct(event: H3Event) {
   try {
-    const deletedProduct = await ProjectModel.deleteOne(
-      {
-        _id: productId,
-      },
-      (err, deletedProduct) => {
-        if (err) {
-          return res.json({
-            success: false,
-            message: err.message,
-          })
-        }
-        return res.json({
-          status: true,
-          message: 'The Product has been deleted Successfully...',
-        })
-      },
-    )
+    const productId = getRouterParam(event, 'id')
+
+    await ProjectModel.deleteOne({ _id: productId })
+    return { status: true, message: 'The Product has been deleted Successfully...' }
   }
-  catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    })
+  catch (error) {
+    throw createError({ statusCode: 422, message: error instanceof Error ? error.message : 'Failed to delete experience' })
   }
 }
 
-export const deleteProductImage = async function (req, res) {
-  // const productImageId = req.params.id;
-  // let key = this.uploadedFiles[index].location.split('/').pop()
-  // debugger
+export async function deleteProductImage(event: H3Event) {
+  const storageLocation = getHeader(event, 'storagelocation')
   const params = {
     Bucket: 'kathirr007-portfolio',
-    Key: `${req.headers.storagelocation}`,
+    Key: `${storageLocation}`,
   }
 
-  try {
-    const deletedProductImage = await deleteImage(params)
-    return res.json({
-      status: true,
-      message: 'The Product Image has been deleted Successfully...',
-    })
-  }
-  catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    })
-  }
-} */
+  await deleteImage(params)
+  return { status: true, message: 'The Product Image has been deleted Successfully...' }
+}

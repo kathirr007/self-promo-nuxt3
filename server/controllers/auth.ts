@@ -1,19 +1,35 @@
-export function onlyAuthUser(req, res, next) {
-  // console.log(req)
-  // debugger;
-  if (req.isAuthenticated()) {
-    return next()
+import type { H3Event } from 'h3'
+import type { User } from '~~/server/models/types/user'
+
+export async function onlyAuthUser(event: H3Event) {
+  const { user } = await requireUserSession(event)
+
+  if (!user) {
+    throw createError({
+      statusCode: 401,
+      statusMessage: 'Authentication required',
+    })
   }
 
-  return res.status(401).send({ errors: { auth: 'Not Authenticated!' } })
+  return true
 }
 
-export function onlyAdmin(req, res, next) {
-  const user = req.user
-  // debugger
-  if (user && user.role === 'admin') {
-    return next()
+export async function onlyAdmin(event: H3Event) {
+  const { user } = await requireUserSession(event)
+
+  if (!user) {
+    throw createError({
+      statusCode: 401,
+      statusMessage: 'Authentication required',
+    })
   }
 
-  return res.status(401).send({ errors: { auth: 'Not Authorized!' } })
+  if ((user as User).role !== 'admin') {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'Admin access required',
+    })
+  }
+
+  return true
 }

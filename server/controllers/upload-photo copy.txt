@@ -18,7 +18,7 @@ AWS.config.loadFromPath('./credentials-ehl.json');
 var s3 = new AWS.S3();
 var params = {  Bucket: 'your bucket', Key: 'your object' };
  */
-function deleteImage(params) {
+async function deleteImage(params) {
   // debugger
   s3.deleteObject(params, (err, data) => {
     if (err)

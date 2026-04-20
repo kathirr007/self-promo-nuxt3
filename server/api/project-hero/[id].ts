@@ -1,0 +1,14 @@
+import { deleteProjectHero, updateProductHero } from '~~/server/controllers/product-hero'
+
+export default defineEventHandler(async (event) => {
+  const method = event.node.req.method
+
+  if (method === 'PUT') {
+    return await updateProductHero(event)
+  }
+  else if (method === 'DELETE') {
+    return await deleteProjectHero(event)
+  }
+
+  throw createError({ statusCode: 404, message: 'Not Found api router' })
+})
