@@ -2,7 +2,7 @@ import type { H3Event } from '#imports'
 import { createCategory, deleteCategory, getCategories, updateCategory } from '~~/server/controllers/category'
 
 export default defineEventHandler(async (event: H3Event) => {
-  const method = event.req.method
+  const method = event.node.req.method
 
   switch (method) {
     case 'POST':

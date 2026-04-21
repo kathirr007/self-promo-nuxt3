@@ -61,58 +61,14 @@ export default defineEventHandler(async (event) => {
 
   switch (method) {
     case 'GET':
-      if (url === 'user-products') {
-        // GET /api/products/user-products
-        const isAuthUser = await onlyAuthUser(event)
-        const isAdmin = await onlyAdmin(event)
-        if (!isAuthUser || !isAdmin) {
-          throw createError({
-            statusCode: 401,
-            statusMessage: 'Unauthorized',
-          })
-        }
-        return await getAdminProducts(event)
-      }
-      else if (url && url.startsWith('s/')) {
-        // GET /api/products/s/[slug]
-        return await getProductBySlug(event)
-      }
-      else if (url) {
-        // GET /api/products/[id]
-        return await getProductById(event)
-      }
-      else {
-        // GET /api/products
-        return await getProducts()
-      }
+      // GET /api/products
+      return await getProducts()
 
     case 'POST':
       // POST /api/products
       await onlyAuthUser(event)
       await onlyAdmin(event)
       return await createProduct(event)
-
-    case 'PATCH':
-      // PATCH /api/products/[id]
-      await onlyAuthUser(event)
-      await onlyAdmin(event)
-      await deleteImages(event)
-      return await updateProduct(event)
-
-    case 'DELETE':
-      if (url && url.startsWith('ProdImage/')) {
-        // DELETE /api/products/ProdImage/[id]
-        await onlyAuthUser(event)
-        await onlyAdmin(event)
-        return await deleteProductImage(event)
-      }
-      else {
-        // DELETE /api/products/[id]
-        await onlyAuthUser(event)
-        await onlyAdmin(event)
-        await deleteImages(event)
-        return await deleteProduct(event)
-      }
 
     default:
       throw createError({

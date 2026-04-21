@@ -1,7 +1,7 @@
 import { createExperience, deleteExperience, getExperiences, updateExperience } from '~~/server/controllers/experience'
 
 export default defineEventHandler(async (event) => {
-  const method = event.req.method
+  const method = event.node.req.method
 
   if (method === 'GET') {
     return await getExperiences(event)
