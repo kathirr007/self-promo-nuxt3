@@ -1,5 +1,5 @@
 import { onlyAdmin, onlyAuthUser } from '~~/server/controllers/auth'
-import { getAdminProducts } from '~~/server/controllers/project'
+import { getAdminProjects } from '~~/server/controllers/project'
 
 export default defineEventHandler(async (event) => {
   // GET /api/products/user-products
@@ -11,5 +11,5 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Unauthorized',
     })
   }
-  return await getAdminProducts(event)
+  return await getAdminProjects(event)
 })

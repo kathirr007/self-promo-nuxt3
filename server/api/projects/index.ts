@@ -51,8 +51,7 @@ module.exports = router; */
 // This replaces the Express router pattern
 
 import { onlyAdmin, onlyAuthUser } from '~~/server/controllers/auth'
-import { createProduct, deleteProduct, deleteProductImage, getAdminProducts, getProductById, getProductBySlug, getProducts, updateProduct } from '~~/server/controllers/project'
-import { deleteImages, upload } from '~~/server/controllers/upload-photo'
+import { createProject, getProjects } from '~~/server/controllers/project'
 
 // GET /api/products
 export default defineEventHandler(async (event) => {
@@ -62,13 +61,13 @@ export default defineEventHandler(async (event) => {
   switch (method) {
     case 'GET':
       // GET /api/products
-      return await getProducts()
+      return await getProjects()
 
     case 'POST':
       // POST /api/products
       await onlyAuthUser(event)
       await onlyAdmin(event)
-      return await createProduct(event)
+      return await createProject(event)
 
     default:
       throw createError({

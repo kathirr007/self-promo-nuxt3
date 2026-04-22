@@ -1,5 +1,6 @@
 import type { H3Event } from 'h3'
-import type { Product } from '~~/server/models/types/product'
+
+import type { Project } from '~~/server/models/types/project'
 import slugify from 'slugify'
 import { deleteImage } from '~~/server/controllers/upload-photo'
 import CategoryModel from '~~/server/models/category'
@@ -8,9 +9,9 @@ import ProjectModel from '~~/server/models/project'
 import UserModel from '~~/server/models/user'
 import { getRouterParam } from '#imports'
 
-export async function getProducts(): Promise<Product[]> {
+export async function getProjects(): Promise<Project[]> {
   // let data: any
-  return await ProductModel.find({ status: 'published' })
+  return await ProjectModel.find({ status: 'published' })
     .populate('category', '_id name', CategoryModel)
     .populate('author', '_id -_id -password -products -email -role', UserModel)
     .sort({ updatedAt: -1 })
@@ -54,7 +55,7 @@ export async function getProducts(): Promise<Product[]> {
     })
 } */
 
-export async function getAdminProducts(event: H3Event) {
+export async function getAdminProjects(event: H3Event): Promise<Project[]> {
   const userId = ((await requireUserSession(event)).user as Record<string, any>)._id
 
   return await ProjectModel.find({ author: userId })
@@ -71,7 +72,7 @@ export async function getProductById(event: H3Event) {
     .exec()
 }
 
-export async function getProductBySlug(event: H3Event) {
+export async function getProjectBySlug(event: H3Event) {
   const slug = getRouterParam(event, 'slug')
 
   return await ProjectModel.findOne({ slug })
@@ -80,55 +81,55 @@ export async function getProductBySlug(event: H3Event) {
 }
 
 // Needs recheck
-export async function createProduct(event: H3Event) {
-  const productData = await readBody(event)
+export async function createProject(event: H3Event) {
+  const projectData = await readBody(event)
   const { user } = (await requireUserSession(event))
-  const product = new ProductModel(productData)
-  product.author = (user as Record<string, any>)._id
-  product.storageLocation = `projects/${slugify(productData.title, {
+  const project = new ProjectModel(projectData)
+  project.author = (user as Record<string, any>)._id
+  project.storageLocation = `projects/${slugify(projectData.title, {
     replacement: '-',
     lower: true,
   })}`
 
-  return await product.save()
+  return await project.save()
 }
 
-export async function updateProduct(event: H3Event) {
-  const productId = getRouterParam(event, 'id')
-  const productData = await readBody(event)
+export async function updateProject(event: H3Event) {
+  const projectId = getRouterParam(event, 'id')
+  const projectData = await readBody(event)
 
-  productData.requirements = typeof productData.requirements === 'string' ? JSON.parse(productData.requirements) : productData.requirements
-  productData.wsl = typeof productData.wsl === 'string' ? JSON.parse(productData.wsl) : productData.wsl
-  productData.updatedAt = Date.now()
+  projectData.requirements = typeof projectData.requirements === 'string' ? JSON.parse(projectData.requirements) : projectData.requirements
+  projectData.wsl = typeof projectData.wsl === 'string' ? JSON.parse(projectData.wsl) : projectData.wsl
+  projectData.updatedAt = Date.now()
 
-  const product = await ProjectModel.findById(productId).populate('category').exec()
-  if (!product)
-    throw createError({ statusCode: 404, message: 'Product not found' })
+  const project = await ProjectModel.findById(projectId).populate('category').exec()
+  if (!project)
+    throw createError({ statusCode: 404, message: 'Project not found' })
 
-  if (productData.status && productData.status === 'published') {
-    product.slug = slugify(product.title, {
+  if (projectData.status && projectData.status === 'published') {
+    project.slug = slugify(project.title, {
       replacement: '-',
       lower: true,
     })
   }
 
-  product.set(productData)
-  return await product.save()
+  project.set(projectData)
+  return await project.save()
 }
 
-export async function deleteProduct(event: H3Event) {
+export async function deleteProject(event: H3Event) {
   try {
-    const productId = getRouterParam(event, 'id')
+    const projectId = getRouterParam(event, 'id')
 
-    await ProjectModel.deleteOne({ _id: productId })
-    return { status: true, message: 'The Product has been deleted Successfully...' }
+    await ProjectModel.deleteOne({ _id: projectId })
+    return { status: true, message: 'The Project has been deleted Successfully...' }
   }
   catch (error) {
     throw createError({ statusCode: 422, message: error instanceof Error ? error.message : 'Failed to delete experience' })
   }
 }
 
-export async function deleteProductImage(event: H3Event) {
+export async function deleteProjectImage(event: H3Event) {
   const storageLocation = getHeader(event, 'storagelocation')
   const params = {
     Bucket: 'kathirr007-portfolio',
