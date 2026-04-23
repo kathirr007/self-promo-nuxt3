@@ -20,7 +20,7 @@ export async function createHero(event: H3Event) {
 export async function getProjectHeroes(event: H3Event) {
   try {
     const heroes = await ProjectHeroModel.find({})
-      .populate('project')
+      .populate('project', ProjectHeroModel)
       .sort({ createdAt: -1 })
       .exec()
 
@@ -36,7 +36,7 @@ export async function updateProjectHero(event: H3Event) {
     const id = getRouterParam(event, 'id')
 
     const hero = await ProjectHeroModel.findById(id)
-      .populate('project')
+      .populate('project', ProjectHeroModel)
       .exec()
 
     if (!hero) {
