@@ -10,8 +10,8 @@ export const useHeroesStore = defineStore('heroes', () => {
   }
 
   async function fetchHero() {
-    const data = await $fetch<any>('/api/project-heroes')
-    projectHero.value = data.projectHero
+    const heroes = await $fetch<any>('/api/project-heroes')
+    projectHero.value = heroes
     return projectHero.value
   }
 

@@ -6,7 +6,7 @@ const experiencesStore = useExperiencesStore()
 const heroesStore = useHeroesStore()
 
 await useAsyncData('home', async () => {
-  await Promise.all([
+  return await Promise.all([
     projectStore.fetchProjects(),
     experiencesStore.fetchFeaturedExperiences({ 'filter[featured]': true }),
     heroesStore.fetchHero(),
@@ -15,12 +15,12 @@ await useAsyncData('home', async () => {
 
 const projects = computed(() => projectStore.items)
 const featuredExperiences = computed(() => experiencesStore.items.featured)
-const projectHeros = computed(() => heroesStore.projectHero ? [heroesStore.projectHero] : [])
+const projectHeroes = computed(() => heroesStore.projectHero ? Array.isArray(heroesStore.projectHero) ? heroesStore.projectHero : [heroesStore.projectHero] : [])
 </script>
 
 <template>
   <div>
-    <!-- <SharedHeroSlider :heroes="projectHeros" /> -->
+    <SharedHeroSlider :heroes="projectHeroes as Hero[]" />
 
     <section class="section p-3">
       <div class="container">
