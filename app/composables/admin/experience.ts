@@ -46,7 +46,8 @@ export const useAdminExperienceStore = defineStore('adminExperience', () => {
   async function updatePublishedExperience(id: string, data: Record<string, any>) {
     const experience = await $fetch<any>(`/api/experiences/${id}`, { method: 'PATCH', body: data })
     const index = items.value.published.findIndex(b => b._id === id)
-    if (index !== -1) items.value.published[index] = experience
+    if (index !== -1)
+      items.value.published[index] = experience
     return experience
   }
 
@@ -54,7 +55,8 @@ export const useAdminExperienceStore = defineStore('adminExperience', () => {
     const resource = experience.status === 'active' ? 'drafts' : 'published'
     await $fetch(`/api/experiences/${experience._id}`, { method: 'DELETE' })
     const experienceIndex = items.value[resource].findIndex(b => b._id === experience._id)
-    if (experienceIndex !== -1) items.value[resource].splice(experienceIndex, 1)
+    if (experienceIndex !== -1)
+      items.value[resource].splice(experienceIndex, 1)
     return true
   }
 

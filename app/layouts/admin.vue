@@ -1,16 +1,14 @@
-<script setup>
-// components are automatically imported in Nuxt 4, so you can use them directly without importing
+<script setup lang="ts">
+definePageMeta({ middleware: 'admin' })
 </script>
 
 <template>
-  <div class="page-wrapper">
-    <navbar />
-    <NuxtPage class="layout-contents" />
-    <app-footer />
+  <div class="page-wrapper admin">
+    <NuxtPage />
   </div>
 </template>
 
-<style>
+<style lang="scss">
 html {
   font-family:
     'Source Sans Pro',
@@ -21,6 +19,8 @@ html {
     'Helvetica Neue',
     Arial,
     sans-serif;
+  color: #505763;
+  background-color: #f2f3f5;
   font-size: 16px;
   word-spacing: 1px;
   -ms-text-size-adjust: 100%;
@@ -36,8 +36,22 @@ html {
   box-sizing: border-box;
   margin: 0;
 }
-.columns {
-  margin: 0 !important;
+
+.card.manage-card {
+  .label {
+    color: #353535;
+  }
+}
+
+.full-page-takeover-header {
+  background-color: #58529f;
+  color: white;
+
+  &-text {
+    color: white;
+    font-weight: bold;
+    font-size: 22px;
+  }
 }
 
 .button--green {
@@ -67,9 +81,5 @@ html {
 .button--grey:hover {
   color: #fff;
   background-color: #35495e;
-}
-.layout-contents {
-  height: calc(100vh - (80px + 42px));
-  overflow-y: auto;
 }
 </style>

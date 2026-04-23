@@ -2,11 +2,11 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useNuxtApp } from '#app'
-import { useAuthStore } from '~/stores/auth'
+import { useAuthenticationStore } from '~/composables/authentication'
 
 const router = useRouter()
 const { $toasted } = useNuxtApp()
-const authStore = useAuthStore()
+const authStore = useAuthenticationStore()
 
 // Reactive data
 const isActive = ref(false)
@@ -15,7 +15,7 @@ const isActive = ref(false)
 const user = computed(() => authStore.authUser)
 const isAuth = computed(() => authStore.isAuthenticated)
 const isAdmin = computed(() => authStore.isAdmin)
-const isLoggedIn = computed(() => authStore.loggedIn)
+const isLoggedIn = computed(() => authStore.isAuthenticated)
 const googleUser = computed(() => authStore.user?.name)
 const googleUserAvatar = computed(() => authStore.user?.picture)
 

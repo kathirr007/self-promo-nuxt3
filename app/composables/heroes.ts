@@ -4,14 +4,14 @@ export const useHeroesStore = defineStore('heroes', () => {
   const projectHero = ref<Record<string, any>>({})
 
   async function createHero(projectHeroData: Record<string, any>) {
-    const hero = await $fetch<any>('/api/product-heroes', { method: 'POST', body: projectHeroData })
+    const hero = await $fetch<any>('/api/project-heroes', { method: 'POST', body: projectHeroData })
     projectHero.value = hero
     return projectHero.value
   }
 
   async function fetchHero() {
-    const data = await $fetch<any>('/api/v1')
-    projectHero.value = data.productHero
+    const data = await $fetch<any>('/api/project-heroes')
+    projectHero.value = data.projectHero
     return projectHero.value
   }
 

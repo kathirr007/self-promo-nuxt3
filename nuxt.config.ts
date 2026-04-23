@@ -37,7 +37,15 @@ export default defineNuxtConfig({
       isCustomElement: tag => tag === 'iconify-icon',
     },
   },
+  css: ['@/assets/scss/main.scss'],
   vite: {
+    css: {
+      preprocessorOptions: {
+        scss: {
+          additionalData: '@use "@/assets/scss/variables.scss" as *;',
+        },
+      },
+    },
     optimizeDeps: {
       include: [
         '@vue/devtools-core',

@@ -31,13 +31,15 @@ export const useAdminCategoryStore = defineStore('adminCategory', () => {
     const updated = await $fetch<any>(`/api/categories/${category._id}`, { method: 'PATCH', body: category })
     const categoryIndex = items.value.findIndex(b => b._id === updated._id)
     item.value = updated
-    if (categoryIndex !== -1) items.value[categoryIndex] = updated
+    if (categoryIndex !== -1)
+      items.value[categoryIndex] = updated
   }
 
   async function deleteCategory(category: Record<string, any>) {
     await $fetch(`/api/categories/${category._id}`, { method: 'DELETE' })
     const categoryIndex = items.value.findIndex(b => b._id === category._id)
-    if (categoryIndex !== -1) items.value.splice(categoryIndex, 1)
+    if (categoryIndex !== -1)
+      items.value.splice(categoryIndex, 1)
     return true
   }
 
@@ -58,9 +60,19 @@ export const useAdminCategoryStore = defineStore('adminCategory', () => {
   }
 
   return {
-    items, item, canUpdateCategory,
-    fetchAdminCategories, fetchCategoryById, createCategory, createCategory2,
-    updateCategory, deleteCategory, addLine, removeLine, setLineValue, setProjectValue,
+    items,
+    item,
+    canUpdateCategory,
+    fetchAdminCategories,
+    fetchCategoryById,
+    createCategory,
+    createCategory2,
+    updateCategory,
+    deleteCategory,
+    addLine,
+    removeLine,
+    setLineValue,
+    setProjectValue,
   }
 })
 

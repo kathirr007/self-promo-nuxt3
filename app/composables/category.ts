@@ -6,7 +6,8 @@ export const useCategoryStore = defineStore('category', () => {
   const hasCategories = computed(() => items.value.length > 0)
 
   async function fetchCategories() {
-    if (hasCategories.value) return
+    if (hasCategories.value)
+      return
     const categories = await $fetch<any[]>('/api/categories')
     items.value = categories
     return items.value

@@ -1,10 +1,10 @@
-import { deleteProjectHero, updateProductHero } from '~~/server/controllers/product-hero'
+import { deleteProjectHero, updateProjectHero } from '~~/server/controllers/product-hero'
 
 export default defineEventHandler(async (event) => {
   const method = event.node.req.method
 
   if (method === 'PUT') {
-    return await updateProductHero(event)
+    return await updateProjectHero(event)
   }
   else if (method === 'DELETE') {
     return await deleteProjectHero(event)

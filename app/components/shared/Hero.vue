@@ -1,12 +1,6 @@
 <script setup lang="ts">
-interface Props {
-  title?: string
-  subtitle?: string
-  image?: string
-  promoLink?: string
-}
-
-withDefaults(defineProps<Props>(), {
+import type { HeroSliderProps } from '~/types'
+withDefaults(defineProps<HeroSliderProps>(), {
   title: 'Super Amazing Promo',
   subtitle: 'Super Amazing Promo Subtitle',
   image: 'https://images.unsplash.com/photo-1510519138101-570d1dca3d66?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1631&q=80',

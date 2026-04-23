@@ -20,7 +20,8 @@ export const useAdminStore = defineStore('admin', () => {
   async function deleteHero(heroId: string) {
     await $fetch(`/api/product-heroes/${heroId}`, { method: 'DELETE' })
     const heroIndex = heroes.value.findIndex(b => b._id === heroId)
-    if (heroIndex !== -1) heroes.value.splice(heroIndex, 1)
+    if (heroIndex !== -1)
+      heroes.value.splice(heroIndex, 1)
   }
 
   return { heroes, fetchHeroes, activateHero, deleteHero }

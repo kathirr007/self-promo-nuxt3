@@ -1,0 +1,122 @@
+<script setup lang="ts">
+definePageMeta({ layout: 'admin' })
+
+const router = useRouter()
+const adminProjectStore = useAdminProjectStore()
+const categoryStore = useCategoryStore()
+
+await useAsyncData('create-project-data', () => categoryStore.fetchCategories())
+
+const activeStep = ref(1)
+const steps = ['AdminProjectCreateStep1', 'AdminProjectCreateStep2']
+const stepsLength = steps.length
+const canProceed = ref(false)
+const form = reactive({ title: '', category: '' })
+
+const isFirstStep = computed(() => activeStep.value === 1)
+const isLastStep = computed(() => activeStep.value === stepsLength)
+const progress = computed(() => `${(activeStep.value / stepsLength) * 100}%`)
+const activeComponent = computed(() => steps[activeStep.value - 1])
+
+function mergeFormData({ data, isValid }: { data: Record<string, any>, isValid: boolean }) {
+  Object.assign(form, data)
+  canProceed.value = isValid
+}
+
+function nextStep() {
+  if (activeStep.value < stepsLength)
+    activeStep.value++
+}
+
+function previousStep() {
+  if (activeStep.value > 1)
+    activeStep.value--
+}
+
+function _nextStep() {
+  nextStep()
+  canProceed.value = false
+}
+
+function _previousStep() {
+  previousStep()
+  canProceed.value = true
+}
+
+async function createProject() {
+  await adminProjectStore.createProject(form)
+}
+</script>
+
+<template>
+  <div class="full-page-takeover-window">
+    <div class="full-page-takeover-page">
+      <SharedHeader :title="`Step ${activeStep} of ${stepsLength}`" exit-link="/admin/projects" />
+      <div class="full-page-takeover-header-bottom-progress">
+        <div :style="{ width: progress }" class="full-page-takeover-header-bottom-progress-highlight" />
+      </div>
+      <div class="project-create full-page-takeover-container">
+        <div class="container">
+          <KeepAlive>
+            <component
+              :is="activeComponent"
+              @step-updated="mergeFormData"
+              @go-next="_nextStep"
+            />
+          </KeepAlive>
+        </div>
+        <div class="full-page-footer-row">
+          <div class="container">
+            <div class="full-page-footer-col">
+              <div v-if="!isFirstStep">
+                <a class="button" @click.prevent="_previousStep" @keyup.enter="_previousStep">Previous</a>
+              </div>
+              <div v-else class="empty-container" />
+            </div>
+            <div class="full-page-footer-col">
+              <button v-if="!isLastStep" :disabled="!canProceed" class="button float-right" @click.prevent="_nextStep" @keyup.enter="_nextStep">
+                Continue
+              </button>
+              <button v-else :disabled="!canProceed" class="button is-success float-right" @click="createProject" @keyup.enter="createProject">
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style lang="scss">
+.float-right {
+  float: right;
+}
+.empty-container {
+  width: 1px;
+  height: 1px;
+}
+.project-create {
+  &-wrapper {
+    margin-top: 60px;
+    text-align: center;
+  }
+  &-form {
+    margin-top: 60px;
+    &-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    &-field {
+      min-width: 552px;
+    }
+    .select {
+      width: 100%;
+      > select {
+        width: 100%;
+      }
+    }
+  }
+}
+</style>

@@ -42,7 +42,8 @@ export const useExperiencesStore = defineStore('experiences', () => {
 })
 
 function applyParamsToUrl(url: string, params?: Record<string, any>) {
-  if (!params) return url
+  if (!params)
+    return url
   const query = new URLSearchParams(params).toString()
   return query ? `${url}?${query}` : url
 }

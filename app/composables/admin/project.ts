@@ -85,7 +85,8 @@ export const useAdminProjectStore = defineStore('adminProject', () => {
     }
     await $fetch(`/api/products/${project._id}`, { method: 'DELETE', headers })
     const projectIndex = items.value.findIndex(b => b._id === project._id)
-    if (projectIndex !== -1) items.value.splice(projectIndex, 1)
+    if (projectIndex !== -1)
+      items.value.splice(projectIndex, 1)
     return true
   }
 
@@ -126,10 +127,21 @@ export const useAdminProjectStore = defineStore('adminProject', () => {
   }
 
   return {
-    items, item, canUpdateProject,
-    fetchAdminProjects, fetchProjectById, createProject, updateProject,
-    deleteProjectImage, deleteProject, addLine, removeLine, removeProjectImage,
-    setLineValue, setProjectValue, updateUploadedFiles,
+    items,
+    item,
+    canUpdateProject,
+    fetchAdminProjects,
+    fetchProjectById,
+    createProject,
+    updateProject,
+    deleteProjectImage,
+    deleteProject,
+    addLine,
+    removeLine,
+    removeProjectImage,
+    setLineValue,
+    setProjectValue,
+    updateUploadedFiles,
   }
 })
 
