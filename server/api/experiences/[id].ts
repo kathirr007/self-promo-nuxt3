@@ -1,8 +1,11 @@
-import { deleteExperience, updateExperience } from '~~/server/controllers/experience'
+import { deleteExperience, getExperienceById, updateExperience } from '~~/server/controllers/experience'
 
 export default defineEventHandler(async (event) => {
   const method = event.node.req.method
 
+  if (method === 'GET') {
+    return await getExperienceById(event)
+  }
   if (method === 'PUT') {
     return await updateExperience(event)
   }
