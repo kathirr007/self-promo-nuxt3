@@ -185,6 +185,7 @@ import type { H3Event } from '#imports'
 import AsyncLock from 'async-lock'
 import slugify from 'slugify'
 import Experience from '~~/server/models/experience'
+import '~~/server/models/user'
 
 const lock = new AsyncLock()
 
@@ -258,7 +259,10 @@ export async function getExperienceBySlug(event: any) {
     return foundExperience
   }
   catch (error) {
-    throw createError({ statusCode: 422, message: 'Failed to fetch experience by slug' })
+    throw createError({
+      statusCode: 422,
+      message: error instanceof Error ? error.message : 'Failed to fetch experience by slug',
+    })
   }
 }
 
