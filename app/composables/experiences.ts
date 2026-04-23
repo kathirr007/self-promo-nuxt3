@@ -23,7 +23,7 @@ export const useExperiencesStore = defineStore('experiences', () => {
   }
 
   async function fetchExperienceBySlug(slug: string) {
-    const experience = await $fetch<any>(`/api/experiences/s/${slug}`)
+    const experience = await $fetch<any>(`/api/experiences/slug/${slug}`)
     item.value = experience
     return item.value
   }

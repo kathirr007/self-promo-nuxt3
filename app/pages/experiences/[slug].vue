@@ -16,7 +16,7 @@ useHead({
 <template>
   <div v-if="experience" class="experience-editor-container p-4">
     <div class="container">
-      <EditorEditorView :initial-content="experience.content" />
+      <EditorDefaultView :initial-content="experience.content" />
     </div>
   </div>
   <div v-else class="container">

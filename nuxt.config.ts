@@ -50,6 +50,9 @@ export default defineNuxtConfig({
       include: [
         '@vue/devtools-core',
         '@vue/devtools-kit',
+        '@tiptap/extension-underline',
+        '@tiptap/starter-kit',
+        '@tiptap/vue-3',
       ],
     },
   },

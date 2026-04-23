@@ -1,16 +1,18 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
 
 export const useAuthenticationStore = defineStore('authentication', () => {
-  const user = ref<Record<string, any> | null>(null)
+  const { loggedIn, user, session, fetch, clear, openInPopup } = useUserSession()
+
+  // const user = ref<Record<string, any> | null>(null)
 
   const authUser = computed(() => user.value ?? null)
   const isAuthenticated = computed(() => !!user.value)
-  const isAdmin = computed(() => user.value?.role === 'admin')
+  const isAdmin = computed(() => (user.value as Record<string, any>)?.role === 'admin')
 
   async function login(loginData: Record<string, any>) {
-    const result = await $fetch<Record<string, any>>('/api/auth/login', { method: 'POST', body: loginData })
-    user.value = result
-    return result
+    await $fetch<Record<string, any>>('/api/auth/login', { method: 'POST', body: loginData })
+
+    return user.value
   }
 
   async function resetPassword(resetData: Record<string, any>) {
@@ -19,7 +21,6 @@ export const useAuthenticationStore = defineStore('authentication', () => {
 
   async function logout() {
     await $fetch('/api/auth/logout', { method: 'POST' })
-    user.value = null
   }
 
   async function register(registerData: Record<string, any>) {
