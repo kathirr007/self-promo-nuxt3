@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import slugify from 'slugify'
 
-definePageMeta({ layout: 'admin' })
+definePageMeta({ layout: 'admin', middleware: 'admin' })
 
 const route = useRoute()
 const router = useRouter()
@@ -104,7 +104,7 @@ function checkExperienceValidity() {
     </SharedHeader>
     <div class="experience-editor-container">
       <div class="container">
-        <EditorIndex
+        <EditorUpdate
           ref="editorRef"
           :is-saving="isSaving"
           @editor-mounted="(editor: any) => editor.setContent?.(experience?.content ?? '')"

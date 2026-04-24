@@ -1,7 +1,3 @@
-<script setup lang="ts">
-definePageMeta({ middleware: 'admin' })
-</script>
-
 <template>
   <div class="page-wrapper admin">
     <NuxtPage />

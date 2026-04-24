@@ -1,5 +1,5 @@
 <script setup lang="ts">
-definePageMeta({ layout: 'admin' })
+definePageMeta({ layout: 'admin', middleware: 'admin' })
 
 const router = useRouter()
 const adminProjectStore = useAdminProjectStore()

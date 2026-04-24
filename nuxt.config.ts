@@ -3,7 +3,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2026-04-20',
   telemetry: false,
   devServer: {
-    port: Number(process.env.PORT || 3600),
+    port: Number(process.env.PORT || 3400),
   },
   sourcemap: {
     server: true,
@@ -63,6 +63,12 @@ export default defineNuxtConfig({
     '@nuxt/icon',
     'nuxt-auth-utils',
   ],
+  imports: {
+    dirs: [
+      './app/composables',
+      './app/composables/admin',
+    ],
+  },
   runtimeConfig: {
     MONGODB_URL: process.env.DB_URI,
     AWSAccessKeyId: process.env.AWSAccessKeyId,
@@ -106,6 +112,7 @@ export default defineNuxtConfig({
         '@tiptap/extension-underline',
         '@tiptap/starter-kit',
         '@tiptap/vue-3',
+        'slugify', // CJS
       ],
     },
   },
