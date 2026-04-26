@@ -7,7 +7,7 @@ const categoryStore = useCategoryStore()
 const heroesStore = useHeroesStore()
 
 await useAsyncData(`manage-project-${route.params.id}`, async () => {
-  await Promise.all([
+  return await Promise.all([
     adminProjectStore.fetchProjectById(route.params.id as string),
     categoryStore.fetchCategories(),
   ])

@@ -9,7 +9,7 @@ export default defineNuxtConfig({
     server: true,
     client: true,
   },
-  devtools: { enabled: true },
+  // devtools: { enabled: true },
   app: {
     head: {
       htmlAttrs: {
@@ -55,14 +55,7 @@ export default defineNuxtConfig({
       ],
     },
   },
-  modules: [
-    '@nuxtjs/tailwindcss',
-    '@vueuse/nuxt',
-    '@pinia/nuxt',
-    '@nuxt/eslint',
-    '@nuxt/icon',
-    'nuxt-auth-utils',
-  ],
+  modules: ['@vueuse/nuxt', '@pinia/nuxt', '@nuxt/eslint', '@nuxt/icon', 'nuxt-auth-utils', 'nuxt-swiper'],
   imports: {
     dirs: [
       './app/composables',
@@ -96,7 +89,10 @@ export default defineNuxtConfig({
       isCustomElement: tag => tag === 'iconify-icon',
     },
   },
-  css: ['@/assets/scss/main.scss'],
+  css: [
+    '@/assets/scss/main.scss',
+    'vue-flux/style.css',
+  ],
   vite: {
     css: {
       preprocessorOptions: {

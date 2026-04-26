@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import type { Swiper as SwiperInstance } from 'swiper/types'
 import type { HeroSliderProps } from '~/types'
+import { Autoplay, Navigation, Pagination } from 'swiper/modules'
 
 const props = withDefaults(defineProps<HeroSliderProps>(), {
   heroes: () => [],
@@ -8,57 +10,92 @@ const props = withDefaults(defineProps<HeroSliderProps>(), {
   image: 'https://images.unsplash.com/photo-1510519138101-570d1dca3d66?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1631&q=80',
 })
 
-const currentIndex = ref(0)
-let timer: ReturnType<typeof setInterval> | null = null
-
-onMounted(() => {
-  timer = setInterval(() => {
-    currentIndex.value = (currentIndex.value + 1) % (props.heroes.length || 1)
-  }, 5000)
+const containerRef = ref(null)
+const slides = ref(Array.from({ length: 10 }))
+const swiper = useSwiper(containerRef, {
+  effect: 'creative',
+  loop: true,
+  // grabCursor: true,
+  autoplay: {
+    delay: 5000,
+  },
+  pagination: {
+    clickable: true,
+    el: '.swiper-pagination',
+  },
+  creativeEffect: {
+    prev: {
+      shadow: true,
+      translate: [0, 0, -400],
+    },
+    next: {
+      shadow: true,
+      translate: [0, 0, -400],
+    },
+  },
 })
 
-onBeforeUnmount(() => {
-  if (timer)
-    clearInterval(timer)
+const currentIndex = ref(0)
+
+const currentHero = computed(() => props.heroes[currentIndex.value] ?? null)
+const heroBackground = computed(() => currentHero.value?.image ?? props.image)
+const heroTitle = computed(() => currentHero.value?.title ?? props.title)
+const heroSubtitle = computed(() => currentHero.value?.subtitle ?? props.subtitle)
+const heroLink = computed(() => {
+  const slug = currentHero.value?.project?.slug
+  return slug ? `/projects/${slug}` : '/'
 })
 </script>
 
 <template>
   <section class="hero is-black">
-    <template v-if="heroes.length">
-      <div
-        class="hero-body"
-        :style="{
-          background: `url(${heroes[currentIndex]!.image ?? ''}) no-repeat top center/cover`,
-        }"
-      >
-        <div class="hero-img" />
-        <div class="container px-4 py-2">
-          <h1 class="title">
-            {{ heroes[currentIndex]!.title }}
-          </h1>
-          <h2 class="subtitle is-hidden-mobile">
-            {{ heroes[currentIndex]!.subtitle }}
-          </h2>
-          <NuxtLink
-            :to="heroes[currentIndex]!.product ? `projects/${heroes[currentIndex]!.product!.slug}` : '/'"
-            class="button is-danger"
+    <ClientOnly v-if="heroes.length">
+      <div class="hero-slider">
+        <swiper-container ref="containerRef" :init="false">
+          <swiper-slide
+            v-for="(hero, index) in heroes"
+            :key="`${hero.project?.slug || hero.title}-${index}`"
           >
-            Project Details
-          </NuxtLink>
-        </div>
+            <div
+              class="hero-body"
+            >
+              <div
+                class="hero-img"
+                :style="{
+                  background: `url(${hero.image || image}) no-repeat top center/cover`,
+                }"
+              />
+              <div class="container px-4 py-2">
+                <h1 class="title">
+                  {{ hero.title }}
+                </h1>
+                <h2 class="subtitle is-hidden-mobile">
+                  {{ hero.subtitle }}
+                </h2>
+                <NuxtLink
+                  :to="hero.project?.slug ? `/projects/${hero.project.slug}` : '/'"
+                  class="button is-danger"
+                >
+                  Project Details
+                </NuxtLink>
+              </div>
+            </div>
+          </swiper-slide>
+        </swiper-container>
+        <div class="swiper-pagination" />
       </div>
-    </template>
-    <div v-else class="hero-body">
-      <div class="hero-img" :style="{ background: `url(${image}) no-repeat center center` }" />
+    </ClientOnly>
+
+    <div v-else class="hero-body" :style="{ background: `url(${heroBackground}) no-repeat center center/cover` }">
+      <div class="hero-img" />
       <div class="container px-4 py-2">
         <h1 class="title">
-          {{ title }}
+          {{ heroTitle }}
         </h1>
         <h2 class="subtitle is-hidden-mobile">
-          {{ subtitle }}
+          {{ heroSubtitle }}
         </h2>
-        <NuxtLink to="/" class="button is-danger">
+        <NuxtLink :to="heroLink" class="button is-danger">
           Learn More!
         </NuxtLink>
       </div>
@@ -67,18 +104,79 @@ onBeforeUnmount(() => {
 </template>
 
 <style lang="scss" scoped>
+.hero-slider {
+  position: relative;
+
+  :deep(.swiper-button-next),
+  :deep(.swiper-button-prev) {
+    color: white;
+  }
+
+  :deep(.swiper-pagination) {
+    position: absolute;
+    right: 1.25rem;
+    bottom: 1.25rem;
+    left: 1.25rem;
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    gap: 0.6rem;
+  }
+
+  :deep(.swiper-pagination-bullet) {
+    width: 0.55rem;
+    height: 0.55rem;
+    margin: 0 !important;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.45);
+    opacity: 1;
+    cursor: pointer;
+    transition:
+      transform 0.2s ease,
+      background-color 0.2s ease,
+      border-color 0.2s ease;
+  }
+
+  :deep(.swiper-pagination-bullet-active) {
+    transform: scale(1.15);
+    border-color: #ff3860;
+    background: #ff3860;
+    box-shadow: 0 0 0 4px rgba(255, 56, 96, 0.18);
+  }
+
+  @media screen and (max-width: 576px) {
+    :deep(.swiper-pagination) {
+      right: 0.75rem;
+      bottom: 0.75rem;
+      left: 0.75rem;
+      gap: 0.45rem;
+    }
+
+    :deep(.swiper-pagination-bullet) {
+      width: 0.5rem;
+      height: 0.5rem;
+    }
+  }
+}
+
 .hero-body {
   position: relative;
+  min-height: 22rem;
+  display: flex;
+  align-items: center;
 }
 
 .hero-img {
   opacity: 0.4;
   position: absolute;
-  height: 100%;
-  width: 100%;
-  top: 0;
-  left: 0;
+  inset: 0;
   background-size: cover;
+}
+
+.container {
+  position: relative;
+  z-index: 1;
 }
 
 .is-black {
@@ -87,6 +185,7 @@ onBeforeUnmount(() => {
 
 .title {
   font-size: 25px;
+
   @media screen and (min-width: 576px) {
     font-size: 30px;
   }
@@ -94,5 +193,22 @@ onBeforeUnmount(() => {
 
 .subtitle {
   font-size: 22px;
+}
+
+swiper-slide {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 18px;
+  height: 300px;
+  font-size: 4rem;
+  font-weight: bold;
+  font-family: 'Roboto', sans-serif;
+
+  &:not(.swiper-slide-active) {
+    .hero-body {
+      opacity: 0;
+    }
+  }
 }
 </style>

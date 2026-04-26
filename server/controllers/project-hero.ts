@@ -1,5 +1,6 @@
 import type { H3Event } from 'h3'
 import type { ProjectHero } from '~~/server/models/types/project-hero'
+import ProjectModel from '~~/server/models/project'
 // import { HTTPError } from 'h3'
 import ProjectHeroModel from '~~/server/models/project-hero'
 
@@ -20,7 +21,7 @@ export async function createHero(event: H3Event) {
 export async function getProjectHeroes(event: H3Event) {
   try {
     const heroes = await ProjectHeroModel.find({})
-      .populate('project', ProjectHeroModel)
+      .populate('project', null, ProjectModel)
       .sort({ createdAt: -1 })
       .exec()
 
@@ -36,7 +37,7 @@ export async function updateProjectHero(event: H3Event) {
     const id = getRouterParam(event, 'id')
 
     const hero = await ProjectHeroModel.findById(id)
-      .populate('project', ProjectHeroModel)
+      .populate('project', ProjectModel)
       .exec()
 
     if (!hero) {

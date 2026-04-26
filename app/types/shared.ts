@@ -6,7 +6,7 @@ export interface Hero {
   title: string
   subtitle: string
   image?: string
-  product: { slug: string } | null
+  project: { slug: string } | null
 }
 
 export interface HeroSliderProps {

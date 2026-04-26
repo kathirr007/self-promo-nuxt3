@@ -69,7 +69,7 @@ function googleLogout() {
         <h1 class="brand-title">
           Kathiravan K
         </h1>
-        <figure class="image avatar is-48x48 m-r-sm">
+        <figure class="image avatar is-48x48">
           <img
             class="is-rounded"
             src="/profile-photo.jpg"
@@ -90,6 +90,7 @@ function googleLogout() {
         data-target="navbarBasicExample"
         @click="toggleNavbar"
       >
+        <span aria-hidden="true" />
         <span aria-hidden="true" />
         <span aria-hidden="true" />
         <span aria-hidden="true" />
@@ -158,7 +159,7 @@ function googleLogout() {
                 <!-- If Admin -->
                 <button
                   v-if="isAdmin"
-                  class="button is-primary is-outlined"
+                  class="button is-info"
                   @click="router.push('/admin')"
                 >
                   Admin
@@ -205,8 +206,15 @@ function googleLogout() {
 }
 .navbar-item {
   flex-shrink: unset;
+  img,
+  svg {
+    max-height: unset;
+  }
 }
 .avatar {
   margin-right: 5px;
+}
+.navbar-burger {
+  color: $color-white;
 }
 </style>

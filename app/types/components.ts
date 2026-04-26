@@ -14,12 +14,14 @@ export interface Experience {
 }
 
 export interface Project {
+  _id?: string
   title: string
   subtitle?: string
   slug?: string
   description?: string
   image?: string
   images: ImageItem[]
+  wsl?: WslItem[]
   category?: Category
   productLink?: string
   promoVideoLink?: string
@@ -66,7 +68,7 @@ export interface MultiLineTextInputProps {
 
 export interface TextInputWithCountProps {
   maxLength?: number
-  v: { $touch: () => void; $invalid: boolean }
+  v: { $touch: () => void, $invalid: boolean }
   category?: { name: string }
 }
 

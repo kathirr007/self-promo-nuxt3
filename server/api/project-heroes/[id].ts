@@ -1,4 +1,4 @@
-import { deleteProjectHero, updateProjectHero } from '~~/server/controllers/product-hero'
+import { deleteProjectHero, updateProjectHero } from '~~/server/controllers/project-hero'
 
 export default defineEventHandler(async (event) => {
   const method = event.node.req.method

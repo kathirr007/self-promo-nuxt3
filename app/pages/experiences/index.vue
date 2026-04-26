@@ -28,7 +28,7 @@ await useAsyncData('experiences', async () => {
     filter.pageSize = pagination.value.pageSize
   }
 
-  await Promise.all([
+  return await Promise.all([
     experiencesStore.fetchExperiences(filter),
     experiencesStore.fetchFeaturedExperiences({ 'filter[featured]': true }),
   ])
