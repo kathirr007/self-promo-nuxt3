@@ -11,30 +11,83 @@ export const useAuthenticationStore = defineStore('authentication', () => {
   const isAdmin = computed(() => (user.value as Record<string, any>)?.role === 'admin')
 
   async function login(loginData: Record<string, any>) {
-    await $fetch<Record<string, any>>('/api/auth/login', { method: 'POST', body: loginData })
-    await fetchUserSession()
-    push.success({
-      title: 'Login',
-      message: `Welcome Back ${(user.value as User)?.name}...!`,
-    })
-    return user.value
+    try {
+      await $fetch<Record<string, any>>('/api/auth/login', { method: 'POST', body: loginData })
+      await fetchUserSession()
+      push.success({
+        title: 'Login Successful',
+        message: `Welcome Back ${(user.value as User)?.name}...!`,
+      })
+      return user.value
+    }
+    catch (error: any) {
+      const message = error?.data?.message ?? 'Login failed. Please check your credentials.'
+      push.error({
+        title: 'Login Failed',
+        message,
+        duration: 5000,
+      })
+      throw new Error(message)
+    }
   }
 
   async function resetPassword(resetData: Record<string, any>) {
-    return $fetch('/api/auth/resetPassword', { method: 'POST', body: resetData })
+    try {
+      await $fetch('/api/auth/resetPassword', { method: 'POST', body: resetData })
+      push.success({
+        title: 'Password Reset',
+        message: 'Your password has been reset successfully. Please login with your new password.',
+        duration: 5000,
+      })
+      return true
+    }
+    catch (error: any) {
+      const message = error?.data?.message ?? 'Password reset failed. Please try again.'
+      push.error({
+        title: 'Reset Failed',
+        message,
+        duration: 5000,
+      })
+      throw new Error(message)
+    }
   }
 
   async function logout() {
-    await $fetch('/api/auth/logout', { method: 'POST' })
-    await clearUserSession()
+    try {
+      await $fetch('/api/auth/logout', { method: 'POST' })
+      await clearUserSession()
+      push.success({
+        title: 'Logout',
+        message: 'You have been successfully logged out.',
+        duration: 3000,
+      })
+    }
+    catch (error: any) {
+      push.error({
+        title: 'Logout Failed',
+        message: 'There was a problem logging you out. Please try again.',
+        duration: 5000,
+      })
+    }
   }
 
   async function register(registerData: Record<string, any>) {
     try {
-      return await $fetch('/api/auth/register', { method: 'POST', body: registerData })
+      await $fetch('/api/auth/register', { method: 'POST', body: registerData })
+      push.success({
+        title: 'Registration Successful',
+        message: 'Your account has been created. Please login to continue.',
+        duration: 5000,
+      })
+      return true
     }
     catch (error: any) {
-      const message = error?.data?.errors?.message ?? 'Uuuups, something went wrong. Please try register again!'
+      const message = error?.data?.errors?.message ?? error?.data?.message ?? 'Registration failed. Please try again.'
+      push.error({
+        title: 'Registration Failed',
+        message,
+        duration: 5000,
+      })
       throw new Error(message)
     }
   }

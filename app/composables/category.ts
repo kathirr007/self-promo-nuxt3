@@ -6,11 +6,21 @@ export const useCategoryStore = defineStore('category', () => {
   const hasCategories = computed(() => items.value.length > 0)
 
   async function fetchCategories() {
-    if (hasCategories.value)
-      return
-    const categories = await $fetch<any[]>('/api/categories')
-    items.value = categories
-    return items.value
+    try {
+      if (hasCategories.value)
+        return
+      const categories = await $fetch<any[]>('/api/categories')
+      items.value = categories
+      return categories
+    }
+    catch (error: any) {
+      push.error({
+        title: 'Fetch Failed',
+        message: 'Failed to load categories. Please try again.',
+        duration: 5000,
+      })
+      throw error
+    }
   }
 
   return { items, hasCategories, fetchCategories }

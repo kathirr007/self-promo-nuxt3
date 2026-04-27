@@ -5,15 +5,35 @@ export const useProjectStore = defineStore('project', () => {
   const item = ref<Record<string, any>>({})
 
   async function fetchProjects() {
-    const projects = await $fetch<any[]>('/api/projects')
-    items.value = projects
-    return items.value
+    try {
+      const projects = await $fetch<any[]>('/api/projects')
+      items.value = projects
+      return projects
+    }
+    catch (error: any) {
+      push.error({
+        title: 'Fetch Failed',
+        message: 'Failed to load projects. Please try again.',
+        duration: 5000,
+      })
+      throw error
+    }
   }
 
   async function fetchProjectBySlug(projectSlug: string) {
-    const project = await $fetch<any>(`/api/projects/slug/${projectSlug}`)
-    item.value = project
-    return item.value
+    try {
+      const project = await $fetch<any>(`/api/projects/slug/${projectSlug}`)
+      item.value = project
+      return project
+    }
+    catch (error: any) {
+      push.error({
+        title: 'Fetch Failed',
+        message: `Failed to load project "${projectSlug}".`,
+        duration: 5000,
+      })
+      throw error
+    }
   }
 
   return { items, item, fetchProjects, fetchProjectBySlug }

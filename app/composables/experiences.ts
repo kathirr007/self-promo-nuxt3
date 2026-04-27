@@ -6,32 +6,72 @@ export const useExperiencesStore = defineStore('experiences', () => {
   const pagination = ref({ count: 0, pageCount: 0, pageSize: 5, pageNum: 1 })
 
   async function fetchExperiences(filter?: Record<string, any>) {
-    const url = applyParamsToUrl('/api/experiences', filter)
-    const data = await $fetch<any>(url)
-    const { experiences, count, pageCount } = data
-    items.value.all = experiences
-    pagination.value.count = count
-    pagination.value.pageCount = pageCount
-    return items.value.all
+    try {
+      const url = applyParamsToUrl('/api/experiences', filter)
+      const data = await $fetch<any>(url)
+      const { experiences, count, pageCount } = data
+      items.value.all = experiences
+      pagination.value.count = count
+      pagination.value.pageCount = pageCount
+      return experiences
+    }
+    catch (error: any) {
+      push.error({
+        title: 'Fetch Failed',
+        message: 'Failed to load experiences. Please try again.',
+        duration: 5000,
+      })
+      throw error
+    }
   }
 
   async function fetchFeaturedExperiences(filter?: Record<string, any>) {
-    const url = applyParamsToUrl('/api/experiences', filter)
-    const data = await $fetch<any>(url)
-    items.value.featured = data.experiences
-    return items.value.featured
+    try {
+      const url = applyParamsToUrl('/api/experiences', filter)
+      const data = await $fetch<any>(url)
+      items.value.featured = data.experiences
+      return items.value.featured
+    }
+    catch (error: any) {
+      push.error({
+        title: 'Fetch Failed',
+        message: 'Failed to load featured experiences.',
+        duration: 5000,
+      })
+      throw error
+    }
   }
 
   async function fetchExperienceBySlug(slug: string) {
-    const experience = await $fetch<any>(`/api/experiences/slug/${slug}`)
-    item.value = experience
-    return item.value
+    try {
+      const experience = await $fetch<any>(`/api/experiences/slug/${slug}`)
+      item.value = experience
+      return experience
+    }
+    catch (error: any) {
+      push.error({
+        title: 'Fetch Failed',
+        message: `Failed to load experience "${slug}".`,
+        duration: 5000,
+      })
+      throw error
+    }
   }
 
   async function fetchExperienceById(id: string) {
-    const experience = await $fetch<any>(`/api/experiences/${id}`)
-    item.value = experience
-    return item.value
+    try {
+      const experience = await $fetch<any>(`/api/experiences/${id}`)
+      item.value = experience
+      return experience
+    }
+    catch (error: any) {
+      push.error({
+        title: 'Fetch Failed',
+        message: 'Failed to load experience details.',
+        duration: 5000,
+      })
+      throw error
+    }
   }
 
   function setPage(currentPage: number) {

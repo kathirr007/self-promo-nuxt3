@@ -1,6 +1,7 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
 
 export const useAdminCategoryStore = defineStore('adminCategory', () => {
+  const toast = useToast()
   const items = ref<any[]>([])
   const item = ref<Record<string, any>>({})
   const canUpdateCategory = ref(false)
@@ -18,29 +19,97 @@ export const useAdminCategoryStore = defineStore('adminCategory', () => {
   }
 
   async function createCategory(categoryData: Record<string, any>) {
-    await $fetch('/api/categories/', { method: 'POST', body: categoryData })
-    await navigateTo('/admin/categories')
+    try {
+      await $fetch('/api/categories/', { method: 'POST', body: categoryData })
+      toast.add({
+        title: 'Category Created',
+        description: `Category "${categoryData.name || categoryData.title}" has been created successfully.`,
+        color: 'green',
+      })
+      await navigateTo('/admin/categories')
+    }
+    catch (error: any) {
+      const message = error?.data?.message ?? 'Failed to create category. Please try again.'
+      toast.add({
+        title: 'Create Failed',
+        description: message,
+        color: 'red',
+      })
+      throw new Error(message)
+    }
   }
 
   async function createCategory2(categoryData: Record<string, any>) {
-    const category = await $fetch<any>('/api/categories/', { method: 'POST', body: categoryData })
-    items.value.push(category)
+    try {
+      const category = await $fetch<any>('/api/categories/', { method: 'POST', body: categoryData })
+      items.value.push(category)
+      toast.add({
+        title: 'Category Created',
+        description: `Category "${categoryData.name || categoryData.title}" has been created successfully.`,
+        color: 'green',
+      })
+      return category
+    }
+    catch (error: any) {
+      const message = error?.data?.message ?? 'Failed to create category. Please try again.'
+      toast.add({
+        title: 'Create Failed',
+        description: message,
+        color: 'red',
+      })
+      throw new Error(message)
+    }
   }
 
   async function updateCategory(category: Record<string, any>) {
-    const updated = await $fetch<any>(`/api/categories/${category._id}`, { method: 'PATCH', body: category })
-    const categoryIndex = items.value.findIndex(b => b._id === updated._id)
-    item.value = updated
-    if (categoryIndex !== -1)
-      items.value[categoryIndex] = updated
+    try {
+      const updated = await $fetch<any>(`/api/categories/${category._id}`, { method: 'PATCH', body: category })
+      const categoryIndex = items.value.findIndex(b => b._id === updated._id)
+      item.value = updated
+      if (categoryIndex !== -1)
+        items.value[categoryIndex] = updated
+      
+      toast.add({
+        title: 'Category Updated',
+        description: `Category "${updated.name || updated.title}" has been updated successfully.`,
+        color: 'green',
+      })
+      return updated
+    }
+    catch (error: any) {
+      const message = error?.data?.message ?? 'Failed to update category. Please try again.'
+      toast.add({
+        title: 'Update Failed',
+        description: message,
+        color: 'red',
+      })
+      throw new Error(message)
+    }
   }
 
   async function deleteCategory(category: Record<string, any>) {
-    await $fetch(`/api/categories/${category._id}`, { method: 'DELETE' })
-    const categoryIndex = items.value.findIndex(b => b._id === category._id)
-    if (categoryIndex !== -1)
-      items.value.splice(categoryIndex, 1)
-    return true
+    try {
+      await $fetch(`/api/categories/${category._id}`, { method: 'DELETE' })
+      const categoryIndex = items.value.findIndex(b => b._id === category._id)
+      if (categoryIndex !== -1)
+        items.value.splice(categoryIndex, 1)
+      
+      toast.add({
+        title: 'Category Deleted',
+        description: `Category "${category.name || category.title}" has been deleted successfully.`,
+        color: 'green',
+      })
+      return true
+    }
+    catch (error: any) {
+      const message = error?.data?.message ?? 'Failed to delete category. Please try again.'
+      toast.add({
+        title: 'Delete Failed',
+        description: message,
+        color: 'red',
+      })
+      throw new Error(message)
+    }
   }
 
   function addLine(field: string) {
