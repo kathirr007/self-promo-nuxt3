@@ -1,11 +1,11 @@
 <script setup>
+import { useNotivue } from 'notivue'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useNuxtApp } from '#app'
 import { useAuthenticationStore } from '~/composables/authentication'
 
 const router = useRouter()
-const { $toasted } = useNuxtApp()
+const $notivue = useNotivue()
 const authStore = useAuthenticationStore()
 
 // Reactive data
@@ -40,12 +40,21 @@ async function logout() {
     await authStore.logout()
     isActive.value = !isActive.value
     await router.push('/login')
-    $toasted.success('Successfully logged out...', {
+    /* $notivue.notify({
+      title: 'Successfully logged out...',
+      type: 'success',
+      duration: 3000,
+    }) */
+    push.success({
+      title: 'Logout',
+      message: 'Successfully logged out...',
       duration: 3000,
     })
   }
   catch (err) {
-    $toasted.error('There is something wrong.. 😒', {
+    push.error({
+      title: 'Logout',
+      message: 'There is something wrong.. 😒',
       duration: 3000,
     })
   }

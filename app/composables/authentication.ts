@@ -1,7 +1,8 @@
+import type { User } from '~~/server/models/types/user'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 
 export const useAuthenticationStore = defineStore('authentication', () => {
-  const { loggedIn, user, session, fetch, clear, openInPopup } = useUserSession()
+  const { loggedIn, user, session, fetch: fetchUserSession, clear: clearUserSession, openInPopup } = useUserSession()
 
   // const user = ref<Record<string, any> | null>(null)
 
@@ -11,7 +12,11 @@ export const useAuthenticationStore = defineStore('authentication', () => {
 
   async function login(loginData: Record<string, any>) {
     await $fetch<Record<string, any>>('/api/auth/login', { method: 'POST', body: loginData })
-
+    await fetchUserSession()
+    push.success({
+      title: 'Login',
+      message: `Welcome Back ${(user.value as User)?.name}...!`,
+    })
     return user.value
   }
 
@@ -21,6 +26,7 @@ export const useAuthenticationStore = defineStore('authentication', () => {
 
   async function logout() {
     await $fetch('/api/auth/logout', { method: 'POST' })
+    await clearUserSession()
   }
 
   async function register(registerData: Record<string, any>) {
@@ -33,21 +39,7 @@ export const useAuthenticationStore = defineStore('authentication', () => {
     }
   }
 
-  async function getAuthUser() {
-    if (user.value)
-      return user.value
-    try {
-      const result = await $fetch<Record<string, any>>('/api/users/me')
-      user.value = result
-      return user.value
-    }
-    catch (error) {
-      user.value = null
-      throw error
-    }
-  }
-
-  return { user, authUser, isAuthenticated, isAdmin, login, resetPassword, logout, register, getAuthUser }
+  return { user, loggedIn, session, authUser, isAuthenticated, isAdmin, login, resetPassword, logout, register, fetch: fetchUserSession, clear: clearUserSession, openInPopup }
 })
 
 if (import.meta.hot)

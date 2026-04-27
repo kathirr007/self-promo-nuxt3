@@ -55,7 +55,24 @@ export default defineNuxtConfig({
       ],
     },
   },
-  modules: ['@vueuse/nuxt', '@pinia/nuxt', '@nuxt/eslint', '@nuxt/icon', 'nuxt-auth-utils', 'nuxt-swiper'],
+  modules: ['@vueuse/nuxt', '@pinia/nuxt', '@nuxt/eslint', '@nuxt/icon', 'nuxt-auth-utils', 'nuxt-swiper', 'notivue/nuxt'],
+  css: [
+    '@/assets/scss/main.scss',
+    'vue-flux/style.css',
+    'notivue/notification.css', // Only needed if using built-in <Notification />
+    'notivue/animations.css', // Only needed if using default animations
+  ],
+  notivue: {
+    position: 'top-right',
+    // limit: 4,
+    enqueue: true,
+    avoidDuplicates: true,
+    notifications: {
+      global: {
+        duration: 5000,
+      },
+    },
+  },
   imports: {
     dirs: [
       './app/composables',
@@ -89,10 +106,7 @@ export default defineNuxtConfig({
       isCustomElement: tag => tag === 'iconify-icon',
     },
   },
-  css: [
-    '@/assets/scss/main.scss',
-    'vue-flux/style.css',
-  ],
+
   vite: {
     css: {
       preprocessorOptions: {
@@ -109,6 +123,7 @@ export default defineNuxtConfig({
         '@tiptap/starter-kit',
         '@tiptap/vue-3',
         'slugify', // CJS
+        'vue-flux',
       ],
     },
   },
