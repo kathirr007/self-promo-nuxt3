@@ -43,6 +43,8 @@ export const useHeroesStore = defineStore('heroes', () => {
   }
 
   return { projectHero, createHero, fetchHero }
+}, {
+  persist: true,
 })
 
 if (import.meta.hot)

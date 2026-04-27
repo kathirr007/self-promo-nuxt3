@@ -36,6 +36,7 @@
     "nuxt": "^4.4.2",
     "nuxt-auth-utils": "0.5.29",
     "nuxt-swiper": "2.0.1",
+    "pinia-plugin-persistedstate": "^4.7.1",
     "slugify": "^1.6.9",
     "vue": "latest",
     "vue-flux": "^7.1.2",

@@ -1,35 +1,36 @@
 import type { H3Event } from 'h3'
-import type { User } from '~~/server/models/types/user'
+import type { SessionUser } from '~/types/auth'
 
-export async function onlyAuthUser(event: H3Event) {
-  const { user } = await requireUserSession(event)
+/**
+ * Middleware to ensure user is authenticated
+ * Returns the user session if authenticated, throws 401 error otherwise
+ */
+export async function onlyAuthUser(event: H3Event): Promise<void> {
+  const session = await requireUserSession(event)
 
-  if (!user) {
+  if (!session?.user) {
     throw createError({
       statusCode: 401,
       statusMessage: 'Authentication required',
     })
   }
 
-  return true
+  event.context.user = session.user as SessionUser
 }
 
-export async function onlyAdmin(event: H3Event) {
-  const { user } = await requireUserSession(event)
+/**
+ * Middleware to ensure user is an admin
+ * Returns the user session if user is admin, throws 401/403 error otherwise
+ */
+export async function onlyAdmin(event: H3Event): Promise<void> {
+  await onlyAuthUser(event)
 
-  if (!user) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'Authentication required',
-    })
-  }
-
-  if ((user as User).role !== 'admin') {
+  if (event.context.user.role !== 'admin') {
     throw createError({
       statusCode: 403,
       statusMessage: 'Admin access required',
     })
   }
 
-  return true
+  // return user
 }

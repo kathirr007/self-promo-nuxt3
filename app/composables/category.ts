@@ -24,6 +24,8 @@ export const useCategoryStore = defineStore('category', () => {
   }
 
   return { items, hasCategories, fetchCategories }
+}, {
+  persist: true,
 })
 
 if (import.meta.hot)

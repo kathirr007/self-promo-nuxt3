@@ -1,17 +1,29 @@
 <script setup lang="ts">
+import { useConfirmDialog } from '@vueuse/core'
+
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
 const router = useRouter()
 const adminExperienceStore = useAdminExperienceStore()
 const { createPublishedOptions, createDraftsOptions, commands } = await import('~/pages/admin/options')
 
-await useAsyncData('admin-experiences', () => adminExperienceStore.fetchUserExperiences())
+// Force refetch on client-side to ensure fresh data after page refresh
+onMounted(async () => {
+  if (import.meta.client) {
+    await adminExperienceStore.fetchUserExperiences()
+  }
+})
 
 const published = computed(() => adminExperienceStore.items.published)
 const drafts = computed(() => adminExperienceStore.items.drafts)
 const activeTab = ref(0)
 
 const draftsOptions = createDraftsOptions()
+
+// Confirmation dialog
+const { reveal: showDeleteConfirm, isRevealed: isDeleteRevealed, confirm: dialogConfirm, cancel: dialogCancel } = useConfirmDialog()
+const dialogMessage = ref('')
+const deleteTarget = ref<Record<string, any> | null>(null)
 
 function publishedOptions(isFeatured: boolean) {
   return createPublishedOptions(isFeatured)
@@ -30,8 +42,12 @@ async function handleCommand(command: string, experience: Record<string, any>) {
     await router.push(`/admin/experience/${experience._id}/edit`)
   }
   if (command === commands.DELETE_EXPERIENCE) {
-    if (await $confirm(`Are you sure you want to delete "${experience.title}"?`)) {
-      await adminExperienceStore.deleteExperience(experience)
+    deleteTarget.value = experience
+    dialogMessage.value = `Are you sure you want to delete "${experience.title}"?`
+    const { isCanceled } = await showDeleteConfirm()
+    if (!isCanceled && deleteTarget.value) {
+      await adminExperienceStore.deleteExperience(deleteTarget.value)
+      deleteTarget.value = null
     }
   }
   if (command === commands.TOGGLE_FEATURE) {
@@ -46,10 +62,10 @@ async function handleCommand(command: string, experience: Record<string, any>) {
     <SharedHeader title="Manage Experiences">
       <template #actionMenu>
         <div class="full-page-takeover-header-button">
-          <NuxtLink to="/admin/experience/editor" class="button is-light">
+          <NuxtLink to="/admin/experience/editor" class="button is-light m-r-md">
             New
           </NuxtLink>
-          <NuxtLink to="/" class="button is-danger is-inverted is-outlined">
+          <NuxtLink to="/" class="button">
             <span class="icon"><i class="fas fa-home" /></span>
             <span>FrontEnd</span>
           </NuxtLink>
@@ -121,6 +137,18 @@ async function handleCommand(command: string, experience: Record<string, any>) {
         </section>
       </div>
     </div>
+
+    <!-- Confirmation Dialog -->
+    <Teleport to="body">
+      <SharedConfirmDialog
+        v-if="isDeleteRevealed"
+        :message="dialogMessage"
+        :is-revealed="isDeleteRevealed"
+        :confirm="dialogConfirm"
+        :cancel="dialogCancel"
+        title="Confirm Delete Experience"
+      />
+    </Teleport>
   </div>
 </template>
 

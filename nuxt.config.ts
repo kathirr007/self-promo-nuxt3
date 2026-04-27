@@ -55,7 +55,7 @@ export default defineNuxtConfig({
       ],
     },
   },
-  modules: ['@vueuse/nuxt', '@pinia/nuxt', '@nuxt/eslint', '@nuxt/icon', 'nuxt-auth-utils', 'nuxt-swiper', 'notivue/nuxt'],
+  modules: ['@vueuse/nuxt', '@pinia/nuxt', '@nuxt/eslint', '@nuxt/icon', 'nuxt-auth-utils', 'nuxt-swiper', 'notivue/nuxt', 'pinia-plugin-persistedstate/nuxt'],
   css: [
     '@/assets/scss/main.scss',
     'vue-flux/style.css',
@@ -124,6 +124,8 @@ export default defineNuxtConfig({
         '@tiptap/vue-3',
         'slugify', // CJS
         'vue-flux',
+        '@tiptap/extension-placeholder',
+        '@tiptap/extension-bubble-menu',
       ],
     },
   },

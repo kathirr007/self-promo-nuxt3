@@ -1,4 +1,3 @@
-import type { User } from '~~/server/models/types/user'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 
 export const useAuthenticationStore = defineStore('authentication', () => {
@@ -15,7 +14,7 @@ export const useAuthenticationStore = defineStore('authentication', () => {
       const currentUser = user.value as SessionUser
       push.success({
         title: 'Login Successful',
-        message: `Welcome Back <strong class="has-text-white ml-2">${currentUser?.name}</strong>...!`,
+        message: `Welcome Back ${currentUser?.name}...!`,
       })
       return user.value
     }

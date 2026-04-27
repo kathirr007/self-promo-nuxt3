@@ -1,11 +1,27 @@
 <script setup lang="ts">
+import { useConfirmDialog } from '@vueuse/core'
+
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
 const router = useRouter()
 const adminProjectStore = useAdminProjectStore()
 const projects = computed(() => adminProjectStore.items)
 
-await useAsyncData('admin-projects', () => adminProjectStore.fetchAdminProjects())
+// Force refetch on client-side to ensure fresh data after page refresh
+onMounted(async () => {
+  if (import.meta.client) {
+    await adminProjectStore.fetchAdminProjects()
+  }
+})
+
+await useAsyncData('admin-projects', async () => {
+  return await adminProjectStore.fetchAdminProjects()
+})
+
+// Confirmation dialog
+const { reveal: showDeleteConfirm, isRevealed: isDeleteRevealed, confirm: dialogConfirm, cancel: dialogCancel } = useConfirmDialog()
+const dialogMessage = ref('')
+const deleteTarget = ref<Record<string, any> | null>(null)
 
 function projectStatusClass(status: string): string {
   if (status === 'published')
@@ -32,8 +48,12 @@ function clearSelectedProject() {
 }
 
 async function deleteProject(project: Record<string, any>) {
-  if (await $confirm(`Are you sure you want to delete "${project.title}"?`)) {
-    await adminProjectStore.deleteProject(project)
+  deleteTarget.value = project
+  dialogMessage.value = `Are you sure you want to delete "${project.title}"?`
+  const { isCanceled } = await showDeleteConfirm()
+  if (!isCanceled && deleteTarget.value) {
+    await adminProjectStore.deleteProject(deleteTarget.value)
+    deleteTarget.value = null
   }
 }
 </script>
@@ -109,6 +129,18 @@ async function deleteProject(project: Record<string, any>) {
         </div>
       </div>
     </main>
+
+    <!-- Confirmation Dialog -->
+    <Teleport to="body">
+      <SharedConfirmDialog
+        v-if="isDeleteRevealed"
+        :message="dialogMessage"
+        :is-revealed="isDeleteRevealed"
+        :confirm="dialogConfirm"
+        :cancel="dialogCancel"
+        title="Confirm Delete Project"
+      />
+    </Teleport>
   </div>
 </template>
 

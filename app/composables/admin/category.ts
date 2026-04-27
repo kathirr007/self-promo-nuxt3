@@ -1,7 +1,6 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
 
 export const useAdminCategoryStore = defineStore('adminCategory', () => {
-  const toast = useToast()
   const items = ref<any[]>([])
   const item = ref<Record<string, any>>({})
   const canUpdateCategory = ref(false)
@@ -21,19 +20,19 @@ export const useAdminCategoryStore = defineStore('adminCategory', () => {
   async function createCategory(categoryData: Record<string, any>) {
     try {
       await $fetch('/api/categories/', { method: 'POST', body: categoryData })
-      toast.add({
+      push.success({
         title: 'Category Created',
-        description: `Category "${categoryData.name || categoryData.title}" has been created successfully.`,
-        color: 'green',
+        message: `Category "${categoryData.name || categoryData.title}" has been created successfully.`,
+        duration: 4000,
       })
       await navigateTo('/admin/categories')
     }
     catch (error: any) {
       const message = error?.data?.message ?? 'Failed to create category. Please try again.'
-      toast.add({
+      push.error({
         title: 'Create Failed',
-        description: message,
-        color: 'red',
+        message,
+        duration: 5000,
       })
       throw new Error(message)
     }
@@ -43,19 +42,19 @@ export const useAdminCategoryStore = defineStore('adminCategory', () => {
     try {
       const category = await $fetch<any>('/api/categories/', { method: 'POST', body: categoryData })
       items.value.push(category)
-      toast.add({
+      push.success({
         title: 'Category Created',
-        description: `Category "${categoryData.name || categoryData.title}" has been created successfully.`,
-        color: 'green',
+        message: `Category "${categoryData.name || categoryData.title}" has been created successfully.`,
+        duration: 4000,
       })
       return category
     }
     catch (error: any) {
       const message = error?.data?.message ?? 'Failed to create category. Please try again.'
-      toast.add({
+      push.error({
         title: 'Create Failed',
-        description: message,
-        color: 'red',
+        message,
+        duration: 5000,
       })
       throw new Error(message)
     }
@@ -68,20 +67,20 @@ export const useAdminCategoryStore = defineStore('adminCategory', () => {
       item.value = updated
       if (categoryIndex !== -1)
         items.value[categoryIndex] = updated
-      
-      toast.add({
+
+      push.success({
         title: 'Category Updated',
-        description: `Category "${updated.name || updated.title}" has been updated successfully.`,
-        color: 'green',
+        message: `Category "${updated.name || updated.title}" has been updated successfully.`,
+        duration: 4000,
       })
       return updated
     }
     catch (error: any) {
       const message = error?.data?.message ?? 'Failed to update category. Please try again.'
-      toast.add({
+      push.error({
         title: 'Update Failed',
-        description: message,
-        color: 'red',
+        message,
+        duration: 5000,
       })
       throw new Error(message)
     }
@@ -89,24 +88,24 @@ export const useAdminCategoryStore = defineStore('adminCategory', () => {
 
   async function deleteCategory(category: Record<string, any>) {
     try {
-      await $fetch(`/api/categories/${category._id}`, { method: 'DELETE' })
+      await $fetch(`/api/categories/${category._id}`, { method: 'DELETE', body: { category } })
       const categoryIndex = items.value.findIndex(b => b._id === category._id)
       if (categoryIndex !== -1)
         items.value.splice(categoryIndex, 1)
-      
-      toast.add({
+
+      push.success({
         title: 'Category Deleted',
-        description: `Category "${category.name || category.title}" has been deleted successfully.`,
-        color: 'green',
+        message: `Category "${category.name || category.title}" has been deleted successfully.`,
+        duration: 4000,
       })
       return true
     }
     catch (error: any) {
       const message = error?.data?.message ?? 'Failed to delete category. Please try again.'
-      toast.add({
+      push.error({
         title: 'Delete Failed',
-        description: message,
-        color: 'red',
+        message,
+        duration: 5000,
       })
       throw new Error(message)
     }
@@ -143,6 +142,8 @@ export const useAdminCategoryStore = defineStore('adminCategory', () => {
     setLineValue,
     setProjectValue,
   }
+}, {
+  persist: true,
 })
 
 if (import.meta.hot)

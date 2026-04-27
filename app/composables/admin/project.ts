@@ -7,13 +7,13 @@ export const useAdminProjectStore = defineStore('adminProject', () => {
   const canUpdateProject = ref(false)
 
   async function fetchAdminProjects() {
-    const projects = await $fetch<any[]>('/api/products/user-products')
+    const projects = await $fetch<any[]>('/api/projects/user-projects')
     items.value = projects
     return items.value
   }
 
   async function fetchProjectById(projectId: string) {
-    const project = await $fetch<any>(`/api/products/${projectId}`)
+    const project = await $fetch<any>(`/api/projects/${projectId}`)
     item.value = project
     return item.value
   }
@@ -21,7 +21,7 @@ export const useAdminProjectStore = defineStore('adminProject', () => {
   async function createProject(projectData: Record<string, any>) {
     try {
       setProjectValue('title', projectData.title)
-      await $fetch('/api/products/', { method: 'POST', body: projectData })
+      await $fetch('/api/projects/', { method: 'POST', body: projectData })
       push.success({
         title: 'Project Created',
         message: `Project "${projectData.title}" has been created successfully.`,
@@ -77,13 +77,13 @@ export const useAdminProjectStore = defineStore('adminProject', () => {
       const headers = {
         storagelocation: project.storageLocation,
         storagelocationnew: project.storageLocationNew,
-        uploadedfiles: uploadedFiles,
+        uploadedfiles: uploadedFiles ?? '',
         deletefiles: String(deleteFiles),
       }
 
-      const updated = await $fetch<any>(`/api/products/${project._id}`, { method: 'PATCH', body: data, headers })
+      const updated = await $fetch<any>(`/api/projects/${project._id}`, { method: 'PATCH', body: data, headers })
       item.value = updated
-      
+
       push.success({
         title: 'Project Updated',
         message: `Project "${project.title}" has been updated successfully.`,
@@ -104,7 +104,7 @@ export const useAdminProjectStore = defineStore('adminProject', () => {
 
   async function deleteProjectImage(params: { key: string, s3Key: string }) {
     try {
-      await $fetch(`/api/products/ProdImage/${params.key}`, { method: 'DELETE', headers: { storagelocation: params.s3Key } })
+      await $fetch(`/api/projects/ProdImage/${params.key}`, { method: 'DELETE', headers: { storagelocation: params.s3Key } })
       canUpdateProject.value = true
       push.success({
         title: 'Image Deleted',
@@ -133,11 +133,11 @@ export const useAdminProjectStore = defineStore('adminProject', () => {
         uploadedfiles: uploadedFiles,
         deletefiles: 'true',
       }
-      await $fetch(`/api/products/${project._id}`, { method: 'DELETE', headers })
+      await $fetch(`/api/projects/${project._id}`, { method: 'DELETE', headers })
       const projectIndex = items.value.findIndex(b => b._id === project._id)
       if (projectIndex !== -1)
         items.value.splice(projectIndex, 1)
-      
+
       push.success({
         title: 'Project Deleted',
         message: `Project "${project.title}" has been deleted successfully.`,
@@ -209,6 +209,8 @@ export const useAdminProjectStore = defineStore('adminProject', () => {
     setProjectValue,
     updateUploadedFiles,
   }
+}, {
+  persist: true,
 })
 
 if (import.meta.hot)

@@ -25,6 +25,8 @@ export const useAdminStore = defineStore('admin', () => {
   }
 
   return { heroes, fetchHeroes, activateHero, deleteHero }
+}, {
+  persist: true,
 })
 
 if (import.meta.hot)

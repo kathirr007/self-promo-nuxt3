@@ -37,6 +37,8 @@ export const useProjectStore = defineStore('project', () => {
   }
 
   return { items, item, fetchProjects, fetchProjectBySlug }
+}, {
+  persist: true,
 })
 
 if (import.meta.hot)

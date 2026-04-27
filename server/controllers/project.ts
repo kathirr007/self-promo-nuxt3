@@ -55,7 +55,20 @@ export async function getProjects(): Promise<Project[]> {
 } */
 
 export async function getAdminProjects(event: H3Event): Promise<Project[]> {
-  const userId = ((await requireUserSession(event)).user as Record<string, any>)._id
+  // await onlyAdmin(event)
+
+  const session = await requireUserSession(event)
+
+  // Ensure the ID exists and is a valid format before querying
+  const sessionUser = session?.user as Record<string, any>
+  if (!sessionUser) {
+    throw new Error('User not authenticated')
+  }
+  if (sessionUser.role !== 'admin') {
+    throw new Error('Admin access required')
+  }
+
+  const userId = sessionUser._id
 
   return await ProjectModel.find({ author: userId })
     .populate('author')

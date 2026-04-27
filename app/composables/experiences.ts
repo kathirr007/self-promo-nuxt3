@@ -79,6 +79,8 @@ export const useExperiencesStore = defineStore('experiences', () => {
   }
 
   return { items, item, pagination, fetchExperiences, fetchFeaturedExperiences, fetchExperienceBySlug, fetchExperienceById, setPage }
+}, {
+  persist: true,
 })
 
 function applyParamsToUrl(url: string, params?: Record<string, any>) {

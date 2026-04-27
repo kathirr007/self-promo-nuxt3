@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useConfirmDialog } from '@vueuse/core'
+
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
 const router = useRouter()
@@ -7,8 +9,20 @@ const categories = computed(() => categoryStore.items)
 
 await useAsyncData('admin-categories', () => categoryStore.fetchAdminCategories())
 
+// Force refetch on client-side to ensure fresh data after page refresh
+onMounted(async () => {
+  if (import.meta.client) {
+    await categoryStore.fetchAdminCategories()
+  }
+})
+
 const canProceed = ref(false)
 const form = reactive({ title: '' })
+
+// Confirmation dialog using VueUse
+const { reveal: showDeleteConfirm, isRevealed: isDeleteRevealed, confirm: dialogConfirm, cancel: dialogCancel } = useConfirmDialog()
+const deleteTarget = ref<Record<string, any> | null>(null)
+const dialogMessage = ref('')
 
 function mergeFormData({ data, isValid }: { data: { title: string }, isValid: boolean }) {
   Object.assign(form, data)
@@ -22,9 +36,12 @@ async function createCategory() {
 }
 
 async function deleteCategory(category: Record<string, any>) {
-  const { $confirm } = useNuxtApp()
-  if (await $confirm(`Are you sure you want to delete "${category.name}"?`)) {
-    await categoryStore.deleteCategory(category)
+  deleteTarget.value = category
+  dialogMessage.value = `Are you sure you want to delete "${category.name}"?`
+  const { isCanceled } = await showDeleteConfirm()
+  if (!isCanceled && deleteTarget.value) {
+    await categoryStore.deleteCategory(deleteTarget.value)
+    deleteTarget.value = null
   }
 }
 </script>
@@ -34,10 +51,10 @@ async function deleteCategory(category: Record<string, any>) {
     <SharedHeader title="Manage Categories">
       <template #actionMenu>
         <div class="full-page-takeover-header-button">
-          <NuxtLink to="/admin/category/create" class="button is-light">
+          <NuxtLink to="/admin/category/create" class="button is-light m-r-md">
             New Category
           </NuxtLink>
-          <NuxtLink to="/" class="button is-danger is-inverted is-outlined">
+          <NuxtLink to="/" class="button">
             <span class="icon"><i class="fas fa-home" /></span>
             <span>FrontEnd</span>
           </NuxtLink>
@@ -71,6 +88,18 @@ async function deleteCategory(category: Record<string, any>) {
         </div>
       </div>
     </div>
+
+    <!-- Confirmation Dialog -->
+    <Teleport to="body">
+      <SharedConfirmDialog
+        v-if="isDeleteRevealed"
+        :message="dialogMessage"
+        :is-revealed="isDeleteRevealed"
+        :confirm="dialogConfirm"
+        :cancel="dialogCancel"
+        title="Confirm Delete Category"
+      />
+    </Teleport>
   </div>
 </template>
 
@@ -84,6 +113,7 @@ async function deleteCategory(category: Record<string, any>) {
   }
   .tag {
     text-transform: capitalize;
+    cursor: pointer;
   }
 }
 .categories-list.list {

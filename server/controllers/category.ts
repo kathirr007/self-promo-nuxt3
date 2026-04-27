@@ -99,7 +99,7 @@ import CategoryModel from '~~/server/models/category'
 export async function createCategory(event: any): Promise<any> {
   try {
     const body = await readBody(event)
-    const category = new CategoryModel()
+    const category = new CategoryModel(body)
 
     const createdCategory = await category.save()
     return createdCategory
