@@ -39,4 +39,7 @@ declare global {
 
   type Command = T.Command
   type DropdownOption = T.DropdownOption
+
+  // Auth types
+  type SessionUser = T.SessionUser
 }

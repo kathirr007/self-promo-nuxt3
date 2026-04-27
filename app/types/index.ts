@@ -3,48 +3,39 @@
  * Auto-imported by Nuxt
  */
 
-// Shared component types
-export type {
-  Hero,
-  HeroSliderProps,
-  HeaderProps,
-  DropdownItem,
-  DropdownProps,
-  IconSize,
-  IconProps,
-  Navbar,
-} from './shared'
-
-// General component types
-export type {
-  ImageItem,
-  Experience,
-  Project,
-  Category,
-  WslItem,
-  ProjectCardProps,
-  ExperienceCardProps,
-  ProjectCardTooltipProps,
-  ProductHeroCardProps,
-  MultiLineTextInputProps,
-  TextInputWithCountProps,
-  UserTileProps,
-  ModalProps,
-} from './components'
-
 // Admin component types
 export type {
   AdminProject,
-  LandingPageProps,
   LandingPageEmits,
-  PriceProps,
+  LandingPageProps,
   PriceEmits,
-  StatusProps,
-  StatusEmits,
-  TechnologiesUsedProps,
-  ProjectCreateStep1Props,
+  PriceProps,
   ProjectCreateStep1Emits,
+  ProjectCreateStep1Props,
+  StatusEmits,
+  StatusProps,
+  TechnologiesUsedProps,
 } from './admin'
+
+// Auth user types - matches server/models/types/user.d.ts
+export type { SessionUser } from './auth'
+
+// General component types
+export type {
+  Category,
+  Experience,
+  ExperienceCardProps,
+  ImageItem,
+  ModalProps,
+  MultiLineTextInputProps,
+  ProductHeroCardProps,
+  Project,
+  ProjectCardProps,
+  ProjectCardTooltipProps,
+  TextInputWithCountProps,
+  UserTileProps,
+  WslItem,
+} from './components'
 
 // Page types
 export type {
@@ -53,3 +44,15 @@ export type {
 } from './pages'
 
 export { PageCommands } from './pages'
+
+// Shared component types
+export type {
+  DropdownItem,
+  DropdownProps,
+  HeaderProps,
+  Hero,
+  HeroSliderProps,
+  IconProps,
+  IconSize,
+  Navbar,
+} from './shared'

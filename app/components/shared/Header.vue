@@ -25,7 +25,7 @@ async function logout() {
     <div class="full-page-takeover-header-logo">
       <NuxtLink to="/admin" class="has-text-white" aria-label="Admin home">
         <h1 class="full-page-takeover-header-logo-title">
-          <button class="button is-primary is-outlined is-medium is-inverted">
+          <button class="button is-outlined is-medium">
             <span class="icon">
               <span class="sr-only is-hidden">Admin home</span>
               <i class="fas fa-home" />
@@ -52,12 +52,12 @@ async function logout() {
     <div v-if="exitLink" class="full-page-takeover-header-button">
       <a
         v-if="user"
-        class="button is-danger is-inverted is-outlined mr-4"
+        class="button is-danger mr-4"
         tabindex="0"
         aria-label="logout"
         @click.prevent="logout"
       >Logout</a>
-      <NuxtLink :to="exitLink" class="button is-primary is-inverted is-outlined">
+      <NuxtLink :to="exitLink" class="button is-outlined">
         Exit
       </NuxtLink>
     </div>
