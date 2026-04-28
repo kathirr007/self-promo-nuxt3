@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Editor } from '@tiptap/vue-3'
-import { BubbleMenu } from '@tiptap/extension-bubble-menu'
-// import { BubbleMenu } from '@tiptap/vue-3/menus'
+import { BubbleMenu } from '@tiptap/vue-3/menus'
+
 
 defineProps<{ editor: Editor | null }>()
 
@@ -19,7 +19,7 @@ function shouldShow({ editor }: { editor: Editor }) {
 </script>
 
 <template>
-  <BubbleMenu v-if="editor" :editor="editor" :should-show="true">
+  <BubbleMenu v-if="editor" :editor="editor" :tippy-options="{ duration: 100 }">
     <div class="menububble is-active">
       <button
         class="menububble__button"

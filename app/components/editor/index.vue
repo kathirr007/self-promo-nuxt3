@@ -2,10 +2,13 @@
 import type { Editor as TiptapEditor } from '@tiptap/vue-3'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import Placeholder from '@tiptap/extension-placeholder'
+import Heading from '@tiptap/extension-heading'
 import StarterKit from '@tiptap/starter-kit'
 import { EditorContent, useEditor } from '@tiptap/vue-3'
 import { all, createLowlight } from 'lowlight'
-import { CustomDocument, Subtitle, Title } from './extensions'
+import { CustomDocument, SubtitleNode, TitleNode } from './extensions'
+import BubbleMenuExtension from '@tiptap/extension-bubble-menu'
+
 
 const props = withDefaults(defineProps<{
   isSaving?: boolean
@@ -24,15 +27,15 @@ const lowlight = createLowlight(all)
 const editor = useEditor({
   extensions: [
     CustomDocument,
-    Title,
-    Subtitle,
+    TitleNode,
+    SubtitleNode,
     StarterKit.configure({
-      document: false, // Disable default document to use our custom one
-      underline: false, // Disable underline as we'll add it separately if needed
       codeBlock: false, // Disable default codeBlock to use CodeBlockLowlight instead
+      document: false, // Disable default Document to use custom Document extenstion instead
     }),
+    BubbleMenuExtension,    
     Placeholder.configure({
-      showOnlyCurrent: true,
+      /* showOnlyCurrent: true,
       emptyEditorClass: 'is-editor-empty',
       emptyNodeClass: 'is-empty',
       placeholder: ({ node }) => {
@@ -43,7 +46,14 @@ const editor = useEditor({
           return 'Your Subtitle here..'
         }
         return 'Write your experience story...'
+      }, */
+      placeholder: ({ node }) => {
+        if (node.type.name === 'title') return 'Your Title here..'
+        if (node.type.name === 'subtitle') return 'Your Subtitle here..'
+        if (node.type.name === 'paragraph') return 'Write your experience story...'
+        return 'Write your experience story...'
       },
+      showOnlyCurrent: false,
     }),
     CodeBlockLowlight.configure({
       lowlight,
