@@ -51,7 +51,9 @@ function checkExperienceValidity() {
 
 function initExperienceContent(editor: any) {
   if (experience.value && experience.value.content) {
-    editor.commands.setContent(experience.value.content)
+    editorRef.value?.setEditorContent(experience.value.content)
+  } else {
+    editorRef.value?.setEditorContent(undefined)
   }
 }
 </script>

@@ -60,7 +60,7 @@
   *.is-empty:nth-child(1)::before,
   *.is-empty:nth-child(2)::before,
   *.is-empty:nth-child(3)::before {
-    content: attr(data-empty-text);
+    content: attr(data-placeholder);
     float: left;
     color: #adb5bd;
     pointer-events: none;
@@ -77,7 +77,7 @@
 
     // Add placeholder styles for Title and Subtitle
     .title.is-empty::before,
-    .subtitle.is-empty::before {
+    .subtitle.is-empty::before, p:only-child.is-empty::before {
       content: attr(data-placeholder);
       float: left;
       color: #adb5bd;

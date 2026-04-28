@@ -1,3 +1,3 @@
 export { CustomDocument } from './CustomDocument'
-export { Subtitle, SubtitleNode } from './Subtitle'
-export { Title, TitleNode } from './Title'
+export { SubtitleNode } from './Subtitle'
+export { TitleNode } from './Title'

@@ -2,7 +2,6 @@
 import type { Editor as TiptapEditor } from '@tiptap/vue-3'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import Placeholder from '@tiptap/extension-placeholder'
-import Heading from '@tiptap/extension-heading'
 import StarterKit from '@tiptap/starter-kit'
 import { EditorContent, useEditor } from '@tiptap/vue-3'
 import { all, createLowlight } from 'lowlight'
@@ -30,35 +29,25 @@ const editor = useEditor({
     TitleNode,
     SubtitleNode,
     StarterKit.configure({
-      codeBlock: false, // Disable default codeBlock to use CodeBlockLowlight instead
-      document: false, // Disable default Document to use custom Document extenstion instead
+      codeBlock: false,
+      document: false,
     }),
     BubbleMenuExtension,    
     Placeholder.configure({
-      /* showOnlyCurrent: true,
-      emptyEditorClass: 'is-editor-empty',
-      emptyNodeClass: 'is-empty',
-      placeholder: ({ node }) => {
-        if (node.type.name === 'title') {
-          return 'Your Title here..'
-        }
-        if (node.type.name === 'subtitle') {
-          return 'Your Subtitle here..'
-        }
-        return 'Write your experience story...'
-      }, */
       placeholder: ({ node }) => {
         if (node.type.name === 'title') return 'Your Title here..'
         if (node.type.name === 'subtitle') return 'Your Subtitle here..'
         return 'Write your experience story...'
       },
       showOnlyCurrent: false,
+      emptyNodeClass: 'is-empty',
     }),
     CodeBlockLowlight.configure({
       lowlight,
     }),
   ],
   onCreate: ({ editor: e }) => {
+    // Don't initialize with default content - let it be set when content loads
     emit('editorMounted', e as TiptapEditor)
   },
 })
@@ -81,6 +70,30 @@ function getNodeValueByName(name: string): string {
   return node.textContent || ''
 }
 
+function sanitizeContent(htmlContent: string): string {
+  if (!htmlContent) return ''
+  
+  // Parse and sanitize the HTML to ensure title and subtitle have proper classes
+  const parser = typeof DOMParser !== 'undefined' ? new DOMParser() : null
+  if (!parser) return htmlContent
+  
+  const doc = parser.parseFromString(htmlContent, 'text/html')
+  
+  // Ensure first h1 is title with class
+  const firstH1 = doc.querySelector('h1')
+  if (firstH1) {
+    firstH1.className = 'title'
+  }
+  
+  // Ensure first h2 is subtitle with class
+  const firstH2 = doc.querySelector('h2')
+  if (firstH2) {
+    firstH2.className = 'subtitle'
+  }
+  
+  return doc.body.innerHTML
+}
+
 function emitUpdate() {
   if (!editor.value)
     return
@@ -91,6 +104,30 @@ function emitUpdate() {
 
   emit('editorUpdated', { content, title, subtitle })
 }
+
+function setEditorContent(htmlContent: string | undefined) {
+  if (!editor.value || !htmlContent) {
+    // Initialize with empty structure if no content
+    console.log('Setting empty default content')
+    editor.value?.commands.setContent({
+      type: 'doc',
+      content: [
+        { type: 'title' },
+        { type: 'subtitle' },
+        { type: 'paragraph' },
+      ],
+    })
+    return
+  }
+  
+  const sanitized = sanitizeContent(htmlContent)
+  editor.value.commands.setContent(sanitized)
+}
+
+defineExpose({
+  setEditorContent,
+  getNodeValueByName,
+})
 </script>
 
 <template>
