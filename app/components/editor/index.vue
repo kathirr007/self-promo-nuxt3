@@ -50,7 +50,6 @@ const editor = useEditor({
       placeholder: ({ node }) => {
         if (node.type.name === 'title') return 'Your Title here..'
         if (node.type.name === 'subtitle') return 'Your Subtitle here..'
-        if (node.type.name === 'paragraph') return 'Write your experience story...'
         return 'Write your experience story...'
       },
       showOnlyCurrent: false,
