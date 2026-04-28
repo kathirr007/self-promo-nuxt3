@@ -7,13 +7,29 @@ const router = useRouter()
 const categoryStore = useAdminCategoryStore()
 const categories = computed(() => categoryStore.items)
 
-await useAsyncData('admin-categories', () => categoryStore.fetchAdminCategories())
+// Use a timestamp-based key to force refetch on each page load
+const fetchKey = `admin-categories-${Date.now()}`
 
-// Force refetch on client-side to ensure fresh data after page refresh
-onMounted(async () => {
-  if (import.meta.client) {
-    await categoryStore.fetchAdminCategories()
+const { error, refresh } = await useAsyncData(fetchKey, async () => {
+  try {
+    return await categoryStore.fetchAdminCategories()
   }
+  catch (err) {
+    console.error('Failed to fetch categories:', err)
+    throw err
+  }
+}, {
+  server: true,
+  default: () => [],
+})
+
+// Log any errors for debugging
+if (error.value) {
+  console.error('Failed to fetch categories:', error.value)
+}
+
+onMounted(async () => {
+  await refresh()
 })
 
 const canProceed = ref(false)

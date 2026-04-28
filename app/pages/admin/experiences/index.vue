@@ -7,11 +7,24 @@ const router = useRouter()
 const adminExperienceStore = useAdminExperienceStore()
 const { createPublishedOptions, createDraftsOptions, commands } = await import('~/pages/admin/options')
 
-// Force refetch on client-side to ensure fresh data after page refresh
-onMounted(async () => {
-  if (import.meta.client) {
-    await adminExperienceStore.fetchUserExperiences()
+// Use a timestamp-based key to force refetch on each page load
+const fetchKey = `admin-experiences-${Date.now()}`
+
+const { error, refresh } = await useAsyncData(fetchKey, async () => {
+  try {
+    return await adminExperienceStore.fetchUserExperiences()
   }
+  catch (err) {
+    console.error('Failed to fetch experiences:', err)
+    throw err
+  }
+}, {
+  server: true,
+  default: () => ({ published: [], drafts: [] }),
+})
+
+onMounted(async () => {
+  await refresh()
 })
 
 const published = computed(() => adminExperienceStore.items.published)

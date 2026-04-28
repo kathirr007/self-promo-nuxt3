@@ -142,8 +142,6 @@ export const useAdminCategoryStore = defineStore('adminCategory', () => {
     setLineValue,
     setProjectValue,
   }
-}, {
-  persist: true,
 })
 
 if (import.meta.hot)

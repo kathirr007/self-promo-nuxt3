@@ -6,35 +6,19 @@ defineProps<{ editor: Editor | null }>()
 
 <template>
   <div v-if="editor" class="menubar">
-    <button
-      class="menubar__button"
-      :class="{ 'is-active': editor.isActive('bulletList') }"
-      @click="editor.chain().focus().toggleBulletList().run()"
-    >
+    <button class="menubar__button" :class="{ 'is-active': editor.isActive('bulletList') }" @click="editor.chain().focus().toggleBulletList().run()">
       <span class="sr-only">list-ul</span>
       <SharedIcon name="list-ul" />
     </button>
-    <button
-      class="menubar__button"
-      :class="{ 'is-active': editor.isActive('orderedList') }"
-      @click="editor.chain().focus().toggleOrderedList().run()"
-    >
+    <button class="menubar__button" :class="{ 'is-active': editor.isActive('orderedList') }" @click="editor.chain().focus().toggleOrderedList().run()">
       <span class="sr-only">list-ol</span>
       <SharedIcon name="list-ol" />
     </button>
-    <button
-      class="menubar__button"
-      :class="{ 'is-active': editor.isActive('blockquote') }"
-      @click="editor.chain().focus().toggleBlockquote().run()"
-    >
+    <button class="menubar__button" :class="{ 'is-active': editor.isActive('blockquote') }" @click="editor.chain().focus().toggleBlockquote().run()">
       <span class="sr-only">quote-right</span>
       <SharedIcon name="quote-right" />
     </button>
-    <button
-      class="menubar__button"
-      :class="{ 'is-active': editor.isActive('codeBlock') }"
-      @click="editor.chain().focus().toggleCodeBlock().run()"
-    >
+    <button class="menubar__button" :class="{ 'is-active': editor.isActive('codeBlock') }" @click="editor.chain().focus().toggleCodeBlock().run()">
       <span class="sr-only">file-code</span>
       <SharedIcon name="file-code" />
     </button>

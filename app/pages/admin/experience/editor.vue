@@ -15,7 +15,7 @@ async function saveExperience(experienceData: Record<string, any>) {
     <SharedHeader title="Write your Experiences" exit-link="/admin/experiences" />
     <div class="experience-editor-container">
       <div class="container">
-        <EditorIndex @editor-updated="saveExperience" />
+        <Editor @editor-updated="saveExperience" />
       </div>
     </div>
   </div>

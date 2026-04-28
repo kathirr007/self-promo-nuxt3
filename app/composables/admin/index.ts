@@ -5,20 +5,20 @@ export const useAdminStore = defineStore('admin', () => {
   const heroes = ref<any[]>([])
 
   async function fetchHeroes() {
-    const result = await $fetch<any[]>('/api/product-heroes')
+    const result = await $fetch<any[]>('/api/project-heroes')
     heroes.value = result
     return heroes.value
   }
 
   async function activateHero(heroId: string) {
-    const activeHero = await $fetch<any>(`/api/product-heroes/${heroId}`, { method: 'PATCH' })
+    const activeHero = await $fetch<any>(`/api/project-heroes/${heroId}`, { method: 'PATCH' })
     const heroesStore = useHeroesStore()
     heroesStore.projectHero = activeHero
     return activeHero
   }
 
   async function deleteHero(heroId: string) {
-    await $fetch(`/api/product-heroes/${heroId}`, { method: 'DELETE' })
+    await $fetch(`/api/project-heroes/${heroId}`, { method: 'DELETE' })
     const heroIndex = heroes.value.findIndex(b => b._id === heroId)
     if (heroIndex !== -1)
       heroes.value.splice(heroIndex, 1)

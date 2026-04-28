@@ -209,8 +209,6 @@ export const useAdminProjectStore = defineStore('adminProject', () => {
     setProjectValue,
     updateUploadedFiles,
   }
-}, {
-  persist: true,
 })
 
 if (import.meta.hot)

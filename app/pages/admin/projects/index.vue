@@ -7,15 +7,29 @@ const router = useRouter()
 const adminProjectStore = useAdminProjectStore()
 const projects = computed(() => adminProjectStore.items)
 
-// Force refetch on client-side to ensure fresh data after page refresh
-onMounted(async () => {
-  if (import.meta.client) {
-    await adminProjectStore.fetchAdminProjects()
+// Use a timestamp-based key to force refetch on each page load
+const fetchKey = `admin-projects-${Date.now()}`
+
+const { error, refresh } = await useAsyncData(fetchKey, async () => {
+  try {
+    return await adminProjectStore.fetchAdminProjects()
   }
+  catch (err) {
+    console.error('Failed to fetch projects:', err)
+    throw err
+  }
+}, {
+  server: true,
+  default: () => [],
 })
 
-await useAsyncData('admin-projects', async () => {
-  return await adminProjectStore.fetchAdminProjects()
+// Log any errors for debugging
+if (error.value) {
+  console.error('Failed to fetch projects:', error.value)
+}
+
+onMounted(async () => {
+  await refresh()
 })
 
 // Confirmation dialog
@@ -80,8 +94,8 @@ async function deleteProject(project: Record<string, any>) {
             <h1 class="projects-page-title">
               Projects
             </h1>
-            <div v-for="project in projects" :key="project._id" class="tile is-ancestor">
-              <div class="tile is-parent is-12">
+            <div v-for="project in projects" :key="project._id" class="tile is-ancestor m-b-sm">
+              <div class="tile p-sm is-12">
                 <div
                   class="tile tile-overlay-container is-child box"
                   tabindex="0"

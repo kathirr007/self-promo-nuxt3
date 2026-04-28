@@ -4,7 +4,11 @@ definePageMeta({ layout: 'admin', middleware: 'admin' })
 const adminStore = useAdminStore()
 const heroesStore = useHeroesStore()
 
-await useAsyncData('admin-heroes', () => adminStore.fetchHeroes())
+const { refresh } = await useAsyncData('admin-heroes', () => adminStore.fetchHeroes())
+
+onMounted(async () => {
+  await refresh()
+})
 
 const heroes = computed(() => adminStore.heroes)
 const activeHero = computed(() => heroesStore.projectHero)

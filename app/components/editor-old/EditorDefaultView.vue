@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import Underline from '@tiptap/extension-underline'
 import StarterKit from '@tiptap/starter-kit'
 import { EditorContent, useEditor } from '@tiptap/vue-3'
 
@@ -7,7 +6,7 @@ const props = defineProps<{ initialContent: string }>()
 
 const editor = useEditor({
   editable: false,
-  extensions: [StarterKit, Underline],
+  extensions: [StarterKit],
   content: props.initialContent || '',
 })
 

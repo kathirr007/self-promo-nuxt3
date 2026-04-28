@@ -46,12 +46,23 @@
     margin: 0 auto 5rem auto;
   }
 
+  // Tiptap v3 Placeholder styles
+  .is-editor-empty::before {
+    content: attr(data-placeholder);
+    float: left;
+    color: #adb5bd;
+    pointer-events: none;
+    height: 0;
+    font-style: italic;
+  }
+
+  // Legacy placeholder styles (fallback)
   *.is-empty:nth-child(1)::before,
   *.is-empty:nth-child(2)::before,
   *.is-empty:nth-child(3)::before {
     content: attr(data-empty-text);
     float: left;
-    color: #aaa;
+    color: #adb5bd;
     pointer-events: none;
     height: 0;
     font-style: italic;
@@ -62,6 +73,17 @@
 
     * {
       caret-color: currentColor;
+    }
+
+    // Add placeholder styles for Title and Subtitle
+    .title.is-empty::before,
+    .subtitle.is-empty::before {
+      content: attr(data-placeholder);
+      float: left;
+      color: #adb5bd;
+      pointer-events: none;
+      height: 0;
+      font-style: italic;
     }
 
     h1 {

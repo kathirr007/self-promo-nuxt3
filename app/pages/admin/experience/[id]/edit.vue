@@ -48,6 +48,12 @@ function checkExperienceValidity() {
     publishError.value = 'Cannot publish! Title needs to be longer than 10 characters!'
   }
 }
+
+function initExperienceContent(editor: any) {
+  if (experience.value && experience.value.content) {
+    editor.commands.setContent(experience.value.content)
+  }
+}
 </script>
 
 <template>
@@ -104,10 +110,10 @@ function checkExperienceValidity() {
     </SharedHeader>
     <div class="experience-editor-container">
       <div class="container">
-        <EditorUpdate
+        <Editor
           ref="editorRef"
           :is-saving="isSaving"
-          @editor-mounted="(editor: any) => editor.setContent?.(experience?.content ?? '')"
+          @editor-mounted="initExperienceContent"
           @editor-updated="updateExperience"
         />
       </div>

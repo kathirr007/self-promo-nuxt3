@@ -147,8 +147,6 @@ export const useAdminExperienceStore = defineStore('adminExperience', () => {
   }
 
   return { items, item, isSaving, createExperience, fetchExperienceById, fetchUserExperiences, updateExperience, updatePublishedExperience, deleteExperience }
-}, {
-  persist: true,
 })
 
 if (import.meta.hot)
