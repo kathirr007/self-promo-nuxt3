@@ -15,6 +15,7 @@ const isSaving = computed(() => adminExperienceStore.isSaving)
 
 const publishError = ref('')
 const slug = ref('')
+const isGeneratingSlug = ref(false)
 const editorRef = ref<any>(null)
 
 function getCurrentUrl(): string {
@@ -37,22 +38,41 @@ async function updateExperienceStatus({ closeModal }: { closeModal: () => void }
     await router.push('/admin/experiences')
 }
 
-function checkExperienceValidity() {
+async function checkExperienceValidity() {
   const title = editorRef.value?.getNodeValueByName?.('title') ?? ''
   publishError.value = ''
   slug.value = ''
-  if (title && title.length >= 10) {
-    slug.value = slugify(title, { replacement: '-', lower: true })
-  }
-  else {
+
+  if (!title || title.length < 10) {
     publishError.value = 'Cannot publish! Title needs to be longer than 10 characters!'
+    return
+  }
+
+  isGeneratingSlug.value = true
+  try {
+    const generatedSlug = await $fetch('/api/experiences/generate-slug', {
+      method: 'POST',
+      body: {
+        title,
+        currentId: route.params.id as string,
+      },
+    })
+    slug.value = generatedSlug
+  }
+  catch (error) {
+    publishError.value = 'Failed to generate unique slug. Please try again.'
+    console.error('Slug generation error:', error)
+  }
+  finally {
+    isGeneratingSlug.value = false
   }
 }
 
 function initExperienceContent(editor: any) {
   if (experience.value && experience.value.content) {
     editorRef.value?.setEditorContent(experience.value.content)
-  } else {
+  }
+  else {
     editorRef.value?.setEditorContent(undefined)
   }
 }
@@ -65,7 +85,7 @@ function initExperienceContent(editor: any) {
         <div class="full-page-takeover-header-button">
           <SharedModal
             open-title="Publish"
-            open-btn-class="button is-success is-inverted is-outlined"
+            open-btn-class="button is-success"
             title="Review Details"
             @opened="checkExperienceValidity"
             @submitted="updateExperienceStatus($event, 'published')"
@@ -78,11 +98,19 @@ function initExperienceContent(editor: any) {
                 <div class="subtitle">
                   This is how url to experience post will look like after publish:
                 </div>
-                <article class="message is-success">
-                  <div class="message-body">
-                    <strong>{{ getCurrentUrl() }}/experiences/{{ slug }}</strong>
-                  </div>
-                </article>
+                <div v-if="isGeneratingSlug" class="has-text-centered py-3">
+                  <span class="icon">
+                    <Icon name="line-md:loading-twotone-loop" class="text-xl" />
+                  </span>
+                  <span class="ml-2">Generating unique URL...</span>
+                </div>
+                <ClientOnly v-else>
+                  <article class="message is-success">
+                    <div class="message-body">
+                      <strong>{{ getCurrentUrl() }}/experiences/{{ slug }}</strong>
+                    </div>
+                  </article>
+                </ClientOnly>
               </div>
               <article v-else class="message is-danger">
                 <div class="message-body">
@@ -97,7 +125,7 @@ function initExperienceContent(editor: any) {
         <div class="full-page-takeover-header-button">
           <SharedModal
             open-title="Unpublish"
-            open-btn-class="button is-success is-inverted is-outlined"
+            open-btn-class="button is-warning"
             title="Unpublish Experience"
             @submitted="updateExperienceStatus($event, 'active')"
           >
@@ -122,9 +150,3 @@ function initExperienceContent(editor: any) {
     </div>
   </div>
 </template>
-
-<style lang="scss">
-.experience-editor-container {
-  padding-top: 60px;
-}
-</style>

@@ -69,7 +69,7 @@ function openModal() {
           </div>
         </section>
         <footer class="modal-card-foot">
-          <button :disabled="isDisabled" class="button is-success" @click="emitAction">
+          <button :disabled="isDisabled" class="button is-success m-r-md" @click="emitAction">
             {{ actionTitle }}
           </button>
           <button v-if="removeActionTitle" class="button is-danger" @click="emitDeleteAction">

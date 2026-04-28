@@ -1,14 +1,20 @@
 <script setup lang="ts">
+import AdminProjectCreateStep1 from '~/components/admin/ProjectCreateStep1.vue'
+import AdminProjectCreateStep2 from '~/components/admin/ProjectCreateStep2.vue'
+
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
 const router = useRouter()
 const adminProjectStore = useAdminProjectStore()
 const categoryStore = useCategoryStore()
 
-await useAsyncData('create-project-data', () => categoryStore.fetchCategories())
+// Initialize categories on page load (SSR + CSR)
+if (import.meta.server || !categoryStore.hasCategories) {
+  await categoryStore.fetchCategories()
+}
 
 const activeStep = ref(1)
-const steps = ['AdminProjectCreateStep1', 'AdminProjectCreateStep2']
+const steps = [AdminProjectCreateStep1, AdminProjectCreateStep2]
 const stepsLength = steps.length
 const canProceed = ref(false)
 const form = reactive({ title: '', category: '' })
@@ -101,6 +107,23 @@ async function createProject() {
     margin-top: 60px;
     text-align: center;
   }
+
+  &-headerText {
+    font-weight: 500;
+    line-height: 1.1;
+    margin-top: 21px;
+    margin-bottom: 10.5px;
+    font-size: 36px;
+    font-weight: 300;
+  }
+
+  &-subtitle {
+    font-size: 24px;
+    font-weight: 300;
+    margin-top: 21px;
+    margin-bottom: 10.5px;
+  }
+
   &-form {
     margin-top: 60px;
     &-group {

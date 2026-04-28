@@ -77,10 +77,10 @@ async function deleteProject(project: Record<string, any>) {
     <SharedHeader title="Manage Projects">
       <template #actionMenu>
         <div class="full-page-takeover-header-button">
-          <NuxtLink to="/admin/project/create" class="button is-light">
+          <NuxtLink to="/admin/project/create" class="button is-light m-r-md">
             New Project
           </NuxtLink>
-          <NuxtLink to="/" class="button is-danger is-inverted is-outlined">
+          <NuxtLink to="/" class="button">
             <span class="icon"><i class="fas fa-home" /></span>
             <span>FrontEnd</span>
           </NuxtLink>

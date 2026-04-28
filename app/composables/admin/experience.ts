@@ -72,10 +72,10 @@ export const useAdminExperienceStore = defineStore('adminExperience', () => {
   async function updateExperience(id: string, data: Record<string, any>) {
     isSaving.value = true
     try {
-      const experience = await $fetch<any>(`/api/experiences/${id}`, { method: 'PATCH', body: data })
+      const experience = await $fetch<any>(`/api/experiences/${id}`, { method: 'PUT', body: data })
       item.value = experience
       push.success({
-        title: 'Experience Updated',
+        title: 'Experience Update',
         message: `Experience "${data.title || data.position}" has been updated successfully.`,
         duration: 4000,
       })
@@ -97,11 +97,11 @@ export const useAdminExperienceStore = defineStore('adminExperience', () => {
 
   async function updatePublishedExperience(id: string, data: Record<string, any>) {
     try {
-      const experience = await $fetch<any>(`/api/experiences/${id}`, { method: 'PATCH', body: data })
+      const experience = await $fetch<any>(`/api/experiences/${id}`, { method: 'PUT', body: data })
       const index = items.value.published.findIndex(b => b._id === id)
       if (index !== -1)
         items.value.published[index] = experience
-      
+
       push.success({
         title: 'Experience Published',
         message: `Experience "${data.title || data.position}" has been updated and published successfully.`,
@@ -127,7 +127,7 @@ export const useAdminExperienceStore = defineStore('adminExperience', () => {
       const experienceIndex = items.value[resource].findIndex(b => b._id === experience._id)
       if (experienceIndex !== -1)
         items.value[resource].splice(experienceIndex, 1)
-      
+
       push.success({
         title: 'Experience Deleted',
         message: `Experience "${experience.title || experience.position}" has been deleted successfully.`,

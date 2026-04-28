@@ -1,57 +1,10 @@
-/* const express = require("express");
-const router = express.Router();
-
-const AuthCtrl = require("../controllers/auth");
-const ProductCtrl = require("../controllers/product");
-const { deleteImages, upload } = require("../controllers/upload-photo");
-
-router.get("", getProducts);
-
-router.get(
-  "/user-products",
-  onlyAuthUser,
-  onlyAdmin,
-  getadminProducts
-);
-router.get("/:id", getProductById);
-router.get("/s/:slug", getProductBySlug);
-
-router.post(
-  "",
-  onlyAuthUser,
-  onlyAdmin,
-  createProduct
-);
-router.patch(
-  "/:id",
-  onlyAuthUser,
-  onlyAdmin,
-  // upload.none(),
-  upload.array("images", 20),
-  deleteImages(),
-  updateProduct
-);
-router.delete(
-  "/:id",
-  onlyAuthUser,
-  onlyAdmin,
-  deleteImages(),
-  deleteProduct
-);
-router.delete(
-  "/ProdImage/:id",
-  onlyAuthUser,
-  onlyAdmin,
-  deleteProductImage
-);
-
-module.exports = router; */
-
 // Nuxt 4 API routes use file-based routing with HTTP method handlers
 // This replaces the Express router pattern
 
 import { onlyAdmin } from '~~/server/controllers/auth'
 import { createProject, getProjects } from '~~/server/controllers/project'
+import ProjectModel from '~~/server/models/project'
+import { generateUniqueSlug } from '~~/server/utils/slug'
 
 // GET /api/projects
 export default defineEventHandler(async (event) => {
@@ -74,4 +27,19 @@ export default defineEventHandler(async (event) => {
         statusMessage: 'Method Not Allowed',
       })
   }
+})
+
+// POST /api/projects/generate-slug
+export const generateSlug = defineEventHandler(async (event) => {
+  if (event.method !== 'POST') {
+    throw createError({ statusCode: 405, message: 'Method not allowed' })
+  }
+
+  const { title, currentId } = await readBody(event)
+
+  if (!title) {
+    throw createError({ statusCode: 400, message: 'Title is required' })
+  }
+
+  return await generateUniqueSlug(title, ProjectModel, currentId)
 })

@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import type { Editor as TiptapEditor } from '@tiptap/vue-3'
+import BubbleMenuExtension from '@tiptap/extension-bubble-menu'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import Placeholder from '@tiptap/extension-placeholder'
 import StarterKit from '@tiptap/starter-kit'
 import { EditorContent, useEditor } from '@tiptap/vue-3'
 import { all, createLowlight } from 'lowlight'
 import { CustomDocument, SubtitleNode, TitleNode } from './extensions'
-import BubbleMenuExtension from '@tiptap/extension-bubble-menu'
-
 
 const props = withDefaults(defineProps<{
   isSaving?: boolean
@@ -32,11 +31,13 @@ const editor = useEditor({
       codeBlock: false,
       document: false,
     }),
-    BubbleMenuExtension,    
+    BubbleMenuExtension,
     Placeholder.configure({
       placeholder: ({ node }) => {
-        if (node.type.name === 'title') return 'Your Title here..'
-        if (node.type.name === 'subtitle') return 'Your Subtitle here..'
+        if (node.type.name === 'title')
+          return 'Your Title here..'
+        if (node.type.name === 'subtitle')
+          return 'Your Subtitle here..'
         return 'Write your experience story...'
       },
       showOnlyCurrent: false,
@@ -71,26 +72,28 @@ function getNodeValueByName(name: string): string {
 }
 
 function sanitizeContent(htmlContent: string): string {
-  if (!htmlContent) return ''
-  
+  if (!htmlContent)
+    return ''
+
   // Parse and sanitize the HTML to ensure title and subtitle have proper classes
   const parser = typeof DOMParser !== 'undefined' ? new DOMParser() : null
-  if (!parser) return htmlContent
-  
+  if (!parser)
+    return htmlContent
+
   const doc = parser.parseFromString(htmlContent, 'text/html')
-  
+
   // Ensure first h1 is title with class
   const firstH1 = doc.querySelector('h1')
   if (firstH1) {
     firstH1.className = 'title'
   }
-  
+
   // Ensure first h2 is subtitle with class
   const firstH2 = doc.querySelector('h2')
   if (firstH2) {
     firstH2.className = 'subtitle'
   }
-  
+
   return doc.body.innerHTML
 }
 
@@ -119,7 +122,7 @@ function setEditorContent(htmlContent: string | undefined) {
     })
     return
   }
-  
+
   const sanitized = sanitizeContent(htmlContent)
   editor.value.commands.setContent(sanitized)
 }

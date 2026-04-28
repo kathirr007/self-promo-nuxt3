@@ -1,5 +1,5 @@
 import { onlyAdmin } from '~~/server/controllers/auth'
-import { deleteProject, getProductById, updateProject } from '~~/server/controllers/project'
+import { deleteProject, getProjectById, updateProject } from '~~/server/controllers/project'
 import { deleteImages } from '~~/server/controllers/upload-photo'
 
 export default defineEventHandler(async (event) => {
@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
 
   switch (method) {
     case 'GET':
-      return await getProductById(event)
+      return await getProjectById(event)
     case 'PATCH':
       // PATCH /api/projects/[id]
       await onlyAdmin(event)

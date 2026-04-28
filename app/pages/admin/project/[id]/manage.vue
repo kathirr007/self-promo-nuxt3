@@ -1,12 +1,18 @@
 <script setup lang="ts">
+import AdminLandingPage from '~/components/admin/LandingPage.vue'
+import AdminPrice from '~/components/admin/Price.vue'
+import AdminStatus from '~/components/admin/Status.vue'
+import AdminTechnologiesUsed from '~/components/admin/TechnologiesUsed.vue'
+
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
 const route = useRoute()
+const router = useRouter()
 const adminProjectStore = useAdminProjectStore()
 const categoryStore = useCategoryStore()
 const heroesStore = useHeroesStore()
 
-await useAsyncData(`manage-project-${route.params.id}`, async () => {
+const { data: _projectData } = await useAsyncData(`manage-project-${route.params.id}`, async () => {
   return await Promise.all([
     adminProjectStore.fetchProjectById(route.params.id as string),
     categoryStore.fetchCategories(),
@@ -17,9 +23,13 @@ const project = computed(() => adminProjectStore.item)
 const canUpdateProject = computed(() => adminProjectStore.canUpdateProject)
 
 const activeStep = ref(1)
-const steps = ['AdminTechnologiesUsed', 'AdminLandingPage', 'AdminPrice', 'AdminStatus']
+const steps = [AdminTechnologiesUsed, AdminLandingPage, AdminPrice, AdminStatus]
 
 const activeComponent = computed(() => steps[activeStep.value - 1])
+
+const projectHero = reactive<Record<string, any>>({})
+const generatedSlug = ref('')
+const isGeneratingSlug = ref(false)
 
 function activeComponentClass(step: number) {
   return activeStep.value === step ? 'is-active' : ''
@@ -29,7 +39,33 @@ function navigateTo(step: number) {
   activeStep.value = step
 }
 
-const projectHero = reactive<Record<string, any>>({})
+function getCurrentUrl(): string {
+  return import.meta.client ? window.location.origin : ''
+}
+
+async function generateProjectSlug() {
+  if (!project.value?.title) {
+    return
+  }
+
+  isGeneratingSlug.value = true
+  try {
+    const response = await $fetch<string>('/api/projects/generate-slug', {
+      method: 'POST',
+      body: {
+        title: project.value.title,
+        currentId: route.params.id as string,
+      },
+    })
+    generatedSlug.value = response
+  }
+  catch (error) {
+    console.error('Failed to generate slug:', error)
+  }
+  finally {
+    isGeneratingSlug.value = false
+  }
+}
 
 function handleProjectImageUpdate({ index, field }: { index: number, field: string }) {
   adminProjectStore.removeProjectImage(field, index)
@@ -57,6 +93,20 @@ function applyProjectValues() {
   if (!projectHero.image)
     projectHero.image = project.value.image
 }
+
+function handleStatusChange(event: Event) {
+  const newStatus = (event.target as HTMLSelectElement).value
+  if (newStatus === 'published') {
+    generateProjectSlug()
+  }
+}
+
+async function publishProject({ closeModal }: { closeModal: () => void }) {
+  adminProjectStore.setProjectValue('status', 'published')
+  await adminProjectStore.updateProject()
+  closeModal()
+  await router.push('/admin/projects')
+}
 </script>
 
 <template>
@@ -66,7 +116,7 @@ function applyProjectValues() {
         <div class="full-page-takeover-header-button">
           <button
             :disabled="!canUpdateProject"
-            class="button is-primary is-inverted is-outlined"
+            class="button is-primary"
             @click="updateProject"
             @keyup.enter="updateProject"
           >
@@ -75,8 +125,41 @@ function applyProjectValues() {
         </div>
         <div class="full-page-takeover-header-button">
           <SharedModal
+            open-title="Publish"
+            open-btn-class="button is-success"
+            title="Publish Project"
+            @opened="generateProjectSlug"
+            @submitted="publishProject"
+          >
+            <div>
+              <div class="title">
+                Once you publish this project, it will be visible on the public site.
+              </div>
+              <div v-if="project?.title">
+                <div class="subtitle">
+                  This is how the URL to your project will look like:
+                </div>
+                <div v-if="isGeneratingSlug" class="has-text-centered py-3">
+                  <span class="icon">
+                    <Icon name="line-md:loading-twotone-loop" class="text-xl" />
+                  </span>
+                  <span class="ml-2">Generating unique URL...</span>
+                </div>
+                <ClientOnly v-else>
+                  <article class="message is-success">
+                    <div class="message-body">
+                      <strong>{{ getCurrentUrl() }}/projects/{{ generatedSlug }}</strong>
+                    </div>
+                  </article>
+                </ClientOnly>
+              </div>
+            </div>
+          </SharedModal>
+        </div>
+        <div class="full-page-takeover-header-button">
+          <SharedModal
             open-title="Favorite"
-            open-btn-class="button is-primary is-inverted is-outlined"
+            open-btn-class="button is-info"
             title="Make Project Hero"
             @opened="applyProjectValues"
             @submitted="createProjectHero"

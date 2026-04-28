@@ -1,9 +1,9 @@
 import type { Experience as ExperienceType } from '~~/server/models/types/experience'
 import type { H3Event } from '#imports'
 import AsyncLock from 'async-lock'
-import slugify from 'slugify'
 import Experience from '~~/server/models/experience'
 import UserModel from '~~/server/models/user'
+import { generateUniqueSlug } from '~~/server/utils/slug'
 
 const lock = new AsyncLock()
 
@@ -133,9 +133,22 @@ export async function createExperience(event: any) {
           lockId,
           async (done) => {
             try {
+              const session = await requireUserSession(event)
+
+              // Ensure the ID exists and is a valid format before querying
+              const sessionUser = session?.user as Record<string, any>
+              if (!sessionUser) {
+                throw new Error('User not authenticated')
+              }
+
               const experienceData = await readBody<ExperienceType>(event)
               const experience = new Experience(experienceData)
-              experience.author = event.context.user
+              experience.author = sessionUser._id
+
+              // Generate unique slug if experience is being published
+              if (experienceData.status === 'published' && experienceData.title) {
+                experience.slug = await generateUniqueSlug(experienceData.title, Experience)
+              }
 
               const createdExperience = await experience.save()
               setTimeout(done, 5000)
@@ -175,11 +188,14 @@ export async function updateExperience(event: any) {
       throw createError({ statusCode: 404, message: 'Experience not found' })
     }
 
+    const session = await requireUserSession(event)
+    const sessionUser = session?.user as Record<string, any>
+    if (!sessionUser) {
+      throw new Error('User not authenticated')
+    }
+
     if (experienceData?.status && experienceData.status === 'published') {
-      foundExperience.slug = slugify(foundExperience.title, {
-        replacement: '-',
-        lower: true,
-      })
+      foundExperience.slug = await generateUniqueSlug(foundExperience.title, Experience, experienceId)
     }
 
     foundExperience.set(experienceData)

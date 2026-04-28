@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import type { ProjectCreateStep1Props, ProjectCreateStep1Emits } from '~/types'
+import type { ProjectCreateStep1Emits, ProjectCreateStep1Props } from '~/types'
+
+const props = defineProps<ProjectCreateStep1Props>()
+const emit = defineEmits<ProjectCreateStep1Emits>()
 const route = useRoute()
 const categoryFormRef = ref<HTMLFormElement | null>(null)
 const textInputRef = ref<InstanceType<typeof import('~/components/form/TextInputWithCount.vue').default> | null>(null)
-
-const props = defineProps<ProjectCreateStep1Props>()
-
-const emit = defineEmits<ProjectCreateStep1Emits>()
 
 const form = reactive({ title: '' })
 const titleError = ref('')

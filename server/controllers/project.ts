@@ -1,95 +1,109 @@
 import type { H3Event } from 'h3'
 
-import type { Project } from '~~/server/models/types/project'
-import slugify from 'slugify'
-import { deleteImage } from '~~/server/controllers/upload-photo'
-import CategoryModel from '~~/server/models/category'
 import ProjectModel from '~~/server/models/project'
-import UserModel from '~~/server/models/user'
+import { generateUniqueSlug } from '~~/server/utils/slug'
 import { getRouterParam } from '#imports'
 
-export async function getProjects(): Promise<Project[]> {
-  // let data: any
-  return await ProjectModel.find({ status: 'published' })
-    .populate('category', '_id name', CategoryModel)
-    .populate('author', '_id -_id -password -products -email -role', UserModel)
-    .sort({ updatedAt: -1 })
-    .exec()
-    // .then((products) => {
-    //   console.log('projects: ', products)
-    //   data = products
-    // })
-    // .catch((err) => {
-    //   throw new Error(err)
-    // })
-  // return data
-  /* await ProductModel.find({})
-    // .populate('author -_id -password -products -email -role')
-    // .populate('category')
-    // .populate('cuid', 'uid avatar name', CategoryModel)
-    .populate('_id', 'password products email role', UserModel)
-    .populate('_id', 'category', CategoryModel)
-    .sort({ updatedAt: -1 })
-    .exec()
-    .then((products) => {
-      data = products
-    })
-    .catch((err) => {
-      throw new Error(err)
-    })
-  return data */
+export async function getProjects(event?: H3Event) {
+  try {
+    const query = event ? getQuery(event) : {}
+    const pageSize = Number.parseInt(query.pageSize as string || '0') || 0
+    const pageNum = Number.parseInt(query.pageNum as string || '1') || 1
+    const skips = pageSize * (pageNum - 1)
+    const filters = query.filter || {}
+
+    const searchFilter: any = { status: 'published' }
+    if (filters && typeof filters === 'object') {
+      Object.assign(searchFilter, filters)
+    }
+
+    const projects = await ProjectModel.find(searchFilter)
+      .sort({ updatedAt: -1 })
+      .skip(skips)
+      .limit(pageSize)
+      .exec()
+
+    const count = await ProjectModel.countDocuments(searchFilter)
+
+    return {
+      projects,
+      count,
+      pageCount: Math.ceil(count / pageSize),
+    }
+  }
+  catch (error) {
+    throw createError({ statusCode: 422, message: error instanceof Error ? error.message : 'Failed to fetch projects' })
+  }
 }
 
-/* export async function getProducts() {
-  ProjectModel.find({ status: 'published' })
-    .populate('author -_id -password -products -email -role')
-    .populate('category')
-    .sort({ updatedAt: -1 })
-    .exec((errors, products) => {
-      if (errors) {
-        return res.status(422).send(errors)
-      }
+export async function getAdminProjects(event: H3Event) {
+  try {
+    const session = await requireUserSession(event)
+    const sessionUser = session?.user as Record<string, any>
 
-      return res.json(products)
+    if (!sessionUser) {
+      throw createError({ statusCode: 401, message: 'User not authenticated' })
+    }
+
+    const projects = await ProjectModel.find({ author: sessionUser._id })
+      .sort({ createdAt: -1 })
+      .populate('category')
+      .exec()
+
+    return projects
+  }
+  catch (error) {
+    throw createError({
+      statusCode: 422,
+      message: error instanceof Error ? error.message : 'Failed to fetch admin projects',
     })
-} */
-
-export async function getAdminProjects(event: H3Event): Promise<Project[]> {
-  // await onlyAdmin(event)
-
-  const session = await requireUserSession(event)
-
-  // Ensure the ID exists and is a valid format before querying
-  const sessionUser = session?.user as Record<string, any>
-  if (!sessionUser) {
-    throw new Error('User not authenticated')
   }
-  if (sessionUser.role !== 'admin') {
-    throw new Error('Admin access required')
-  }
-
-  const userId = sessionUser._id
-
-  return await ProjectModel.find({ author: userId })
-    .populate('author')
-    .sort({ updatedAt: -1 })
-    .exec()
 }
 
-export async function getProductById(event: H3Event) {
-  const id = getRouterParam(event, 'id')
+export async function getProjectById(event: H3Event) {
+  try {
+    const projectId = getRouterParam(event, 'id')
 
-  return await ProjectModel.findById(id)
-    .populate('category')
-    .exec()
+    const foundProject = await ProjectModel.findById(projectId)
+      .populate('category')
+      .populate('author', '-_id -password -email -role')
+      .exec()
+
+    if (!foundProject) {
+      throw createError({ statusCode: 404, message: 'Project not found' })
+    }
+
+    return foundProject
+  }
+  catch (error) {
+    throw createError({
+      statusCode: 422,
+      message: error instanceof Error ? error.message : 'Failed to fetch project by ID',
+    })
+  }
 }
 
 export async function getProjectBySlug(event: H3Event) {
-  const slug = getRouterParam(event, 'slug')
+  try {
+    const slug = getRouterParam(event, 'slug')
 
-  return await ProjectModel.findOne({ slug })
-    .populate('author', '-_id -password -products -email -role')
-    .exec()
+    const foundProject = await ProjectModel.findOne({ slug })
+      .populate('category')
+      .populate('author', '-_id -password -email -role')
+      .exec()
+
+    if (!foundProject) {
+      throw createError({ statusCode: 404, message: 'Project not found' })
+    }
+
+    return foundProject
+  }
+  catch (error) {
+    throw createError({
+      statusCode: 422,
+      message: error instanceof Error ? error.message : 'Failed to fetch project by slug',
+    })
+  }
 }
 
 // Needs recheck
@@ -98,10 +112,10 @@ export async function createProject(event: H3Event) {
   const { user } = (await requireUserSession(event))
   const project = new ProjectModel(projectData)
   project.author = (user as Record<string, any>)._id
-  project.storageLocation = `projects/${slugify(projectData.title, {
-    replacement: '-',
-    lower: true,
-  })}`
+
+  // Generate storage location with unique slug
+  const uniqueSlug = await generateUniqueSlug(projectData.title, ProjectModel)
+  project.storageLocation = `projects/${uniqueSlug}`
 
   return await project.save()
 }
@@ -119,10 +133,7 @@ export async function updateProject(event: H3Event) {
     throw createError({ statusCode: 404, message: 'Project not found' })
 
   if (projectData.status && projectData.status === 'published') {
-    project.slug = slugify(project.title, {
-      replacement: '-',
-      lower: true,
-    })
+    project.slug = await generateUniqueSlug(project.title, ProjectModel, projectId)
   }
 
   project.set(projectData)
@@ -137,17 +148,31 @@ export async function deleteProject(event: H3Event) {
     return { status: true, message: 'The Project has been deleted Successfully...' }
   }
   catch (error) {
-    throw createError({ statusCode: 422, message: error instanceof Error ? error.message : 'Failed to delete experience' })
+    throw createError({ statusCode: 500, message: error instanceof Error ? error.message : 'Failed to delete project' })
   }
 }
 
 export async function deleteProjectImage(event: H3Event) {
-  const storageLocation = getHeader(event, 'storagelocation')
-  const params = {
-    Bucket: 'kathirr007-portfolio',
-    Key: `${storageLocation}`,
-  }
+  try {
+    const imageId = getRouterParam(event, 'id')
+    const { field, index } = await readBody(event)
 
-  await deleteImage(params)
-  return { status: true, message: 'The Product Image has been deleted Successfully...' }
+    const project = await ProjectModel.findById(imageId)
+    if (!project) {
+      throw createError({ statusCode: 404, message: 'Project not found' })
+    }
+
+    if (field === 'images' && Array.isArray(project.images)) {
+      project.images.splice(index, 1)
+    }
+    else if (field === 'image') {
+      project.image = ''
+    }
+
+    await project.save()
+    return { status: true, message: 'Image deleted successfully' }
+  }
+  catch (error) {
+    throw createError({ statusCode: 500, message: error instanceof Error ? error.message : 'Failed to delete project image' })
+  }
 }
