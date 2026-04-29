@@ -7,7 +7,12 @@ useHead({ title: 'Know more about Kathiravan K | Sr.UI Developer' })
     <a class="skip-link" href="#aboutMaincontent">Skip to main</a>
     <div id="aboutMaincontent" class="container">
       <figure class="avatar is-128x128">
-        <img src="https://via.placeholder.com/128x128?text=Profile" alt="User Profile photo" height="128" width="128">
+        <img
+          src="/profile-photo.jpg"
+          alt="User Profile photo"
+          height="128"
+          width="128"
+        >
       </figure>
       <p>
         My name is Kathiravan Kumarasamy and I am
