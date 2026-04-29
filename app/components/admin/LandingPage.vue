@@ -21,16 +21,53 @@ const titleTouched = ref(false)
 
 const titleValid = computed(() => props.project.title?.length >= 10)
 
+// Track if we're showing newly selected files vs server-uploaded files
+const hasNewFiles = ref(false)
+
 onMounted(() => {
-  const firstImage = props.project.images.at(0)
-  if (firstImage !== undefined && typeof firstImage.location !== 'undefined') {
-    uploadedFiles.value = props.project.images
-    selectedFilesCount.value = uploadedFiles.value.length
-    /* // Set filename for single existing image */
-    selectedFileName.value = 'No file chosen'
-  }
+  loadExistingImages()
   titleTouched.value = true
 })
+
+// Watch for changes in project.images to refresh after save
+watch(() => props.project?.images, (newImages, oldImages) => {
+  console.log('Image change detected:', {
+    newImagesLength: newImages?.length,
+    oldImagesLength: oldImages?.length,
+    hasLocation: newImages && Array.isArray(newImages) && newImages.length > 0 && typeof newImages[0]?.location !== 'undefined',
+    newImagesType: newImages?.[0]?.constructor?.name,
+  })
+
+  // Check if images changed from Files to uploaded objects with location
+  const hasLocation = newImages && Array.isArray(newImages) && newImages.length > 0 && typeof newImages[0]?.location !== 'undefined'
+
+  // Reload if we now have server-uploaded images (with location property)
+  if (hasLocation) {
+    console.log('Reloading images from server response')
+    loadExistingImages()
+  }
+}, { deep: true, immediate: false })
+
+function loadExistingImages() {
+  console.log('Loading existing images, project.images:', props.project.images)
+  const firstImage = props.project.images?.at(0)
+  if (firstImage !== undefined && typeof firstImage.location !== 'undefined') {
+    console.log('Found server-uploaded images:', props.project.images.length)
+    uploadedFiles.value = [...props.project.images]
+    selectedFilesCount.value = uploadedFiles.value.length
+    selectedFileName.value = uploadedFiles.value.length === 1
+      ? (uploadedFiles.value[0]?.originalname ?? 'No file chosen')
+      : 'No file chosen'
+    // Clear any temporary blob URLs
+    image.value = []
+    filesToSubmit.value = []
+    hasNewFiles.value = false
+    console.log('Loaded', uploadedFiles.value.length, 'images from server')
+  }
+  else {
+    console.log('No server-uploaded images found, firstImage:', firstImage)
+  }
+}
 
 function formatNames(filesCount: number): string {
   if (filesCount === 0)
@@ -46,6 +83,7 @@ function imagesAdd(event: Event) {
   filesToSubmit.value = files
   selectedFilesCount.value = files.length
   selectedFileName.value = files.length === 1 ? (files[0]?.name ?? '') : ''
+  hasNewFiles.value = true
   adminProjectStore.updateUploadedFiles(uploadedFiles)
 }
 
@@ -57,6 +95,7 @@ function removeImage(index: number) {
   // Update filename based on remaining files
   if (selectedFilesCount.value === 0) {
     selectedFileName.value = ''
+    hasNewFiles.value = false
   }
   else if (selectedFilesCount.value === 1 && filesToSubmit.value.length === 1) {
     selectedFileName.value = filesToSubmit.value[0]?.name || ''
@@ -102,12 +141,12 @@ async function removeS3Image(index: number, field: string) {
     selectedFilesCount.value = uploadedFiles.value.length
 
     // Update filename display
-    if (uploadedFiles.value.length === 0) {
+    /* if (uploadedFiles.value.length === 0) {
       selectedFileName.value = ''
     }
     else if (uploadedFiles.value.length === 1 && uploadedFiles.value[0]) {
       selectedFileName.value = uploadedFiles.value[0].originalname || 'image'
-    }
+    } */
   }
   catch (error) {
     console.error('Failed to delete image:', error)
@@ -127,6 +166,11 @@ function emitProjectValue(e: Event | string, field: string) {
   }
   emit('projectValueUpdated', { value, field })
 }
+
+// Expose method to manually refresh images after save
+defineExpose({
+  refreshImages: loadExistingImages,
+})
 </script>
 
 <template>
@@ -195,7 +239,8 @@ function emitProjectValue(e: Event | string, field: string) {
           <label class="label">Project Image</label>
           <div class="">
             <div class=" centered p-0">
-              <div class="file has-name is-fullwidth">
+              <!-- Show file input only when there are images -->
+              <div v-if="uploadedFiles.length > 0 || image.length > 0" class="file has-name is-fullwidth">
                 <input
                   id="productPhoto"
                   ref="imagesInput"
@@ -211,6 +256,26 @@ function emitProjectValue(e: Event | string, field: string) {
                     <span class="file-label">{{ formatNames(selectedFilesCount) }}</span>
                   </span>
                 </label>
+              </div>
+
+              <!-- Show upload button when no images exist -->
+              <div v-else class="control">
+                <button type="button" class="button is-primary is-light" @click="imagesInput?.click()">
+                  <span class="icon">
+                    <Icon name="mdi:upload" />
+                  </span>
+                  <span>Upload Images</span>
+                </button>
+                <input
+                  id="productPhoto"
+                  ref="imagesInput"
+                  class="file-input"
+                  type="file"
+                  multiple
+                  style="display: none"
+                  @change="imagesAdd"
+                  @input="emitProjectValue($event, 'images')"
+                >
               </div>
 
               <div v-if="uploadedFiles.length !== 0" class="notification is-danger is-light my-2" role="alert">

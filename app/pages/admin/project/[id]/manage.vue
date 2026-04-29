@@ -26,6 +26,7 @@ const activeStep = ref(1)
 const steps = [AdminTechnologiesUsed, AdminLandingPage, AdminPrice, AdminStatus]
 
 const activeComponent = computed(() => steps[activeStep.value - 1])
+const activeComponentRef = ref<any>(null)
 
 const projectHero = reactive<Record<string, any>>({})
 const generatedSlug = ref('')
@@ -80,7 +81,23 @@ function handleProjectUpdate({ value, field }: { value: any, field: string }) {
 }
 
 async function updateProject() {
-  await adminProjectStore.updateProject()
+  try {
+    await adminProjectStore.updateProject()
+    // After successful update, refetch the project to get the latest data from server
+    await adminProjectStore.fetchProjectById(route.params.id as string)
+    
+    // Wait a tick for Vue to update the DOM and props
+    await nextTick()
+    
+    // If the active component is LandingPage, refresh its images
+    if (activeComponentRef.value?.refreshImages) {
+      console.log('Refreshing images in LandingPage component')
+      activeComponentRef.value.refreshImages()
+    }
+  } catch (error) {
+    console.error('Failed to update project:', error)
+    // Error is already handled in the store
+  }
 }
 
 async function createProjectHero({ closeModal }: { closeModal: () => void }) {
@@ -222,6 +239,7 @@ async function publishProject({ closeModal }: { closeModal: () => void }) {
               <Transition name="slideUp" mode="out-in">
                 <component
                   :is="activeComponent"
+                  ref="activeComponentRef"
                   :project="project"
                   @project-image-updated="handleProjectImageUpdate"
                   @project-value-updated="handleProjectUpdate"
@@ -229,6 +247,7 @@ async function publishProject({ closeModal }: { closeModal: () => void }) {
               </Transition>
             </KeepAlive>
           </div>
+
         </div>
       </div>
     </div>
