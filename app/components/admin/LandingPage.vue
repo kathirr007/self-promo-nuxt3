@@ -12,6 +12,9 @@ const categories = computed(() => categoryStore.items)
 const uploadedFiles = ref<ImageItem[]>([])
 const imagesInput = ref<HTMLInputElement | null>(null)
 const image = ref<string[]>([])
+const filesToSubmit = ref<File[]>([])
+const selectedFilesCount = ref(0)
+const selectedFileName = ref('')
 
 const titleError = ref('')
 const titleTouched = ref(false)
@@ -22,24 +25,45 @@ onMounted(() => {
   const firstImage = props.project.images.at(0)
   if (firstImage !== undefined && typeof firstImage.location !== 'undefined') {
     uploadedFiles.value = props.project.images
+    selectedFilesCount.value = uploadedFiles.value.length
+    /* // Set filename for single existing image */
+    selectedFileName.value = 'No file chosen'
   }
   titleTouched.value = true
 })
 
-function formatNames(files: File[]): string {
-  if (!files.length)
+function formatNames(filesCount: number): string {
+  if (filesCount === 0)
     return 'No file chosen'
-  return files.length === 1 ? (files.at(0)?.name ?? '') : `${files.length} files selected`
+  if (filesCount === 1)
+    return selectedFileName.value
+  return `${filesCount} files selected`
 }
 
 function imagesAdd(event: Event) {
   const files = Array.from((event.target as HTMLInputElement).files ?? [])
   image.value = files.map(f => URL.createObjectURL(f))
+  filesToSubmit.value = files
+  selectedFilesCount.value = files.length
+  selectedFileName.value = files.length === 1 ? (files[0]?.name ?? '') : ''
   adminProjectStore.updateUploadedFiles(uploadedFiles)
 }
 
 function removeImage(index: number) {
   image.value.splice(index, 1)
+  filesToSubmit.value.splice(index, 1)
+  selectedFilesCount.value = filesToSubmit.value.length
+
+  // Update filename based on remaining files
+  if (selectedFilesCount.value === 0) {
+    selectedFileName.value = ''
+  }
+  else if (selectedFilesCount.value === 1 && filesToSubmit.value.length === 1) {
+    selectedFileName.value = filesToSubmit.value[0]?.name || ''
+  }
+  else {
+    selectedFileName.value = ''
+  }
 }
 
 async function removeS3Image(index: number, field: string) {
@@ -75,6 +99,15 @@ async function removeS3Image(index: number, field: string) {
 
     // Remove from frontend after successful backend deletion
     uploadedFiles.value.splice(index, 1)
+    selectedFilesCount.value = uploadedFiles.value.length
+
+    // Update filename display
+    if (uploadedFiles.value.length === 0) {
+      selectedFileName.value = ''
+    }
+    else if (uploadedFiles.value.length === 1 && uploadedFiles.value[0]) {
+      selectedFileName.value = uploadedFiles.value[0].originalname || 'image'
+    }
   }
   catch (error) {
     console.error('Failed to delete image:', error)
@@ -160,8 +193,8 @@ function emitProjectValue(e: Event | string, field: string) {
 
         <div class="field">
           <label class="label">Project Image</label>
-          <div class="columns">
-            <div class="column centered p-0">
+          <div class="">
+            <div class=" centered p-0">
               <div class="file has-name is-fullwidth">
                 <input
                   id="productPhoto"
@@ -175,7 +208,7 @@ function emitProjectValue(e: Event | string, field: string) {
                 >
                 <label for="productPhoto" class="file-label">
                   <span class="file-cta">
-                    <span class="file-label">{{ formatNames(Array.from((imagesInput as HTMLInputElement)?.files ?? [])) }}</span>
+                    <span class="file-label">{{ formatNames(selectedFilesCount) }}</span>
                   </span>
                 </label>
               </div>
