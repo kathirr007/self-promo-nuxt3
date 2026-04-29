@@ -11,14 +11,6 @@ export interface MultipartFile {
   arrayBuffer: () => Promise<ArrayBuffer>
 }
 
-// Log configuration for debugging (remove in production)
-console.log('S3 Configuration:', {
-  region: process.env.AWS_REGION || process.env.AWSRegion || 'us-east-2',
-  hasAccessKey: !!process.env.AWSAccessKeyId,
-  hasSecretKey: !!process.env.AWSSecretKey,
-  bucket: process.env.S3_BUCKET_NAME || 'kathirr007-portfolio',
-})
-
 const s3Client = new S3Client({
   region: process.env.AWS_REGION || process.env.AWSRegion || 'us-east-2',
   credentials: {
@@ -186,13 +178,6 @@ export async function uploadToS3(fileOrBuffer: Buffer | MultipartFile, folderPat
       }
     }
 
-    console.log('Uploading to S3:', {
-      bucket: BUCKET_NAME,
-      key,
-      mimeType,
-      size: fileBuffer.length,
-    })
-
     const command = new PutObjectCommand({
       Bucket: BUCKET_NAME,
       Key: key,
@@ -216,13 +201,7 @@ export async function uploadToS3(fileOrBuffer: Buffer | MultipartFile, folderPat
     }
   }
   catch (error: any) {
-    console.error('S3 Upload Error:', {
-      message: error.message,
-      code: error.Code || error.code,
-      region: process.env.AWS_REGION || process.env.AWSRegion || 'us-east-2',
-      bucket: BUCKET_NAME,
-      stack: error.stack,
-    })
+    console.error('S3 Upload Error:', error.message)
     throw new Error(`Failed to upload file to S3: ${error.message}`)
   }
 }
@@ -233,27 +212,15 @@ export async function uploadToS3(fileOrBuffer: Buffer | MultipartFile, folderPat
  */
 export async function deleteFromS3(key: string): Promise<void> {
   try {
-    console.log('Deleting from S3:', {
-      bucket: BUCKET_NAME,
-      key,
-    })
-
     const command = new DeleteObjectCommand({
       Bucket: BUCKET_NAME,
       Key: key,
     })
 
     await s3Client.send(command)
-
-    console.log('Successfully deleted from S3:', key)
   }
   catch (error: any) {
-    console.error('S3 Delete Error:', {
-      message: error.message,
-      code: error.Code || error.code,
-      key,
-      bucket: BUCKET_NAME,
-    })
+    console.error('S3 Delete Error:', error.message)
     throw new Error(`Failed to delete file from S3: ${error.message}`)
   }
 }
