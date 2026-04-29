@@ -1,10 +1,10 @@
 import type { H3Event } from 'h3'
 
-import type { MultipartFile } from '~~/server/utils/s3'
-
 import { Buffer } from 'node:buffer'
+import CategoryModel from '~~/server/models/category'
 import ProjectModel from '~~/server/models/project'
-import { deleteFromS3, uploadToS3 } from '~~/server/utils/s3'
+import UserModel from '~~/server/models/user'
+import { deleteFromS3 } from '~~/server/utils/s3'
 import { generateUniqueSlug } from '~~/server/utils/slug'
 import { getRouterParam } from '#imports'
 
@@ -51,7 +51,7 @@ export async function getAdminProjects(event: H3Event) {
 
     const projects = await ProjectModel.find({ author: sessionUser._id })
       .sort({ createdAt: -1 })
-      .populate('category')
+      .populate('category', null, CategoryModel)
       .exec()
 
     return projects
@@ -69,8 +69,8 @@ export async function getProjectById(event: H3Event) {
     const projectId = getRouterParam(event, 'id')
 
     const foundProject = await ProjectModel.findById(projectId)
-      .populate('category')
-      .populate('author', '-_id -password -email -role')
+      .populate('category', null, CategoryModel)
+      .populate('author', '-_id -password -email -role', UserModel)
       .exec()
 
     if (!foundProject) {
@@ -92,8 +92,8 @@ export async function getProjectBySlug(event: H3Event) {
     const slug = getRouterParam(event, 'slug')
 
     const foundProject = await ProjectModel.findOne({ slug })
-      .populate('category')
-      .populate('author', '-_id -password -email -role')
+      .populate('category', null, CategoryModel)
+      .populate('author', '-_id -password -email -role', UserModel)
       .exec()
 
     if (!foundProject) {
@@ -249,7 +249,10 @@ export async function updateProject(event: H3Event) {
 
   projectData.updatedAt = Date.now()
 
-  const project = await ProjectModel.findById(projectId).populate('category').exec()
+  const project = await ProjectModel.findById(projectId)
+    .populate('category', null, CategoryModel)
+    .exec()
+
   if (!project)
     throw createError({ statusCode: 404, message: 'Project not found' })
 
