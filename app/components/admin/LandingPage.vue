@@ -293,25 +293,28 @@ defineExpose({
                   tabindex="0"
                 >
                   <img :src="img.location" class="img-thumbnail multiple-images" :alt="(img.originalname?.split('.').at(0)) ?? img.originalname">
-                  <i
-                    role="button"
-                    aria-label="remove-image"
-                    class="delete-img fas fa-times-circle"
-                    tabindex="0"
+                  <button
+                    type="button"
+                    class="delete-img-btn"
+                    aria-label="Remove image"
                     @click="removeS3Image(index, 'images')"
-                  />
+                  >
+                    <i class="fas fa-times-circle" aria-hidden="true" />
+                  </button>
                 </div>
               </figure>
 
               <div v-else class="uploaded-files is-justify-content-center is-flex is-flex-wrap-wrap p-2">
                 <div v-for="(prodImage, index) in image" :key="index" class="img-wrap p-2" tabindex="0">
                   <img :src="prodImage" class="img-thumbnail" :alt="`uploaded-file-${index + 1}`">
-                  <i
-                    role="button"
-                    aria-label="remove-image"
-                    class="delete-img fas fa-times-circle"
+                  <button
+                    type="button"
+                    class="delete-img-btn"
+                    aria-label="Remove image"
                     @click="removeImage(index)"
-                  />
+                  >
+                    <i class="fas fa-times-circle" aria-hidden="true" />
+                  </button>
                 </div>
               </div>
             </div>
@@ -365,18 +368,34 @@ defineExpose({
       height: auto;
     }
 
-    .delete-img.fas {
+    .delete-img-btn {
       opacity: 0;
       position: absolute;
       right: 5px;
       top: 0;
       cursor: pointer;
-      font-size: 18px !important;
-      color: orangered !important;
+      background: none;
+      border: none;
+      padding: 0;
       transition: opacity 0.2s ease-in;
+
+      i.fas {
+        font-size: 18px !important;
+        color: orangered !important;
+      }
+
+      &:hover {
+        opacity: 1;
+      }
+
+      &:focus {
+        outline: 2px solid #00d1b2;
+        outline-offset: 2px;
+        opacity: 1;
+      }
     }
 
-    &:hover .delete-img.fas {
+    &:hover .delete-img-btn {
       opacity: 1;
     }
   }
