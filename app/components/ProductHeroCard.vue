@@ -1,10 +1,20 @@
 <script setup lang="ts">
 import type { ProductHeroCardProps } from '~/types'
+import VueEasyLightbox from 'vue-easy-lightbox'
+
 withDefaults(defineProps<ProductHeroCardProps>(), {
   navigateTo: '',
   repoLink: '',
   images: () => [],
 })
+
+const visible = ref(false)
+const currentIndex = ref(0)
+
+function openLightbox(index: number) {
+  currentIndex.value = index
+  visible.value = true
+}
 </script>
 
 <template>
@@ -12,10 +22,16 @@ withDefaults(defineProps<ProductHeroCardProps>(), {
     <div class="card-image project-gallery">
       <ClientOnly>
         <div class="gallery-grid">
-          <figure v-for="(img, i) in images" :key="i" class="gallery-item">
-            <img :src="img.location" :alt="img.originalname.split('.')[0]">
+          <figure v-for="(img, i) in images" :key="i" class="gallery-item" @click="openLightbox(i)">
+            <img :src="img.location" :alt="img.originalname || `Image ${i + 1}`">
           </figure>
         </div>
+        <VueEasyLightbox
+          :visible="visible"
+          :imgs="images.map(img => img.location)"
+          :index="currentIndex"
+          @hide="visible = false"
+        />
       </ClientOnly>
     </div>
     <div class="card-content">
@@ -70,6 +86,7 @@ figure.image {
       width: calc(100% / 5);
       box-shadow: 0 0 4px 0 #ccc;
       transition: all 0.25s ease-in-out;
+      cursor: pointer;
 
       &:hover {
         transform: scale(1.2);

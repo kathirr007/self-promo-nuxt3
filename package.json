@@ -40,6 +40,7 @@
     "pinia-plugin-persistedstate": "^4.7.1",
     "slugify": "^1.6.9",
     "vue": "latest",
+    "vue-easy-lightbox": "^1.19.0",
     "vue-flux": "^7.1.2",
     "vue-router": "latest"
   },

@@ -3,7 +3,7 @@ import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import StarterKit from '@tiptap/starter-kit'
 import { EditorContent, useEditor } from '@tiptap/vue-3'
 import { all, createLowlight } from 'lowlight'
-import { CustomDocument, Subtitle, Title } from './extensions'
+import { CustomDocument, SubtitleNode, TitleNode } from './extensions'
 
 const props = defineProps<{
   initialContent: string
@@ -16,8 +16,8 @@ const editor = useEditor({
   editable: false,
   extensions: [
     CustomDocument,
-    Title,
-    Subtitle,
+    TitleNode,
+    SubtitleNode,
     StarterKit.configure({
       document: false,
       underline: false, // Disable underline from StarterKit
