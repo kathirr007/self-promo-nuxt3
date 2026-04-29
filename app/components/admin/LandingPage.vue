@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { LandingPageProps, LandingPageEmits } from '~/types'
+import type { LandingPageEmits, LandingPageProps } from '~/types'
+
 const props = defineProps<LandingPageProps>()
 
 const emit = defineEmits<LandingPageEmits>()
@@ -52,6 +53,10 @@ function emitProjectValue(e: Event | string, field: string) {
   if (field === 'category') {
     const found = categories.value.find((c: Category) => c._id === value)
     return emit('projectValueUpdated', { value: found, field })
+  }
+
+  if (field === 'images') {
+    return emit('projectValueUpdated', { value: Array.from((e as Event & { target: HTMLInputElement }).target?.files ?? []), field })
   }
   emit('projectValueUpdated', { value, field })
 }
@@ -155,7 +160,7 @@ function emitProjectValue(e: Event | string, field: string) {
                   class="img-wrap p-2"
                   tabindex="0"
                 >
-                  <img :src="img.location" class="img-thumbnail multiple-images" :alt="(img.originalname.split('.').at(0)) ?? img.originalname">
+                  <img :src="img.location" class="img-thumbnail multiple-images" :alt="(img.originalname?.split('.').at(0)) ?? img.originalname">
                   <i
                     role="button"
                     aria-label="remove-image"

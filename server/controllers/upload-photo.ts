@@ -28,7 +28,7 @@ async function deleteImage(params: { Bucket: string, Key: string }): Promise<voi
 async function deleteImages(event: any): Promise<void> {
   const headers = getHeaders(event)
 
-  const objects = headers.uploadedfiles !== 'undefined'
+  const objects = headers.uploadedfiles !== undefined
     ? JSON.parse(headers.uploadedfiles as string).map((key: any) => ({
         Key: key.location.split('/').splice(3).join('/'),
       }))
@@ -57,7 +57,7 @@ async function deleteImages(event: any): Promise<void> {
 export default defineEventHandler(async (event) => {
   const headers = getHeaders(event)
 
-  const objects = headers.uploadedfiles !== 'undefined'
+  const objects = headers.uploadedfiles !== undefined
     ? JSON.parse(headers.uploadedfiles as string).map((key: any) => ({
         Key: key.location.split('/').splice(3).join('/'),
       }))

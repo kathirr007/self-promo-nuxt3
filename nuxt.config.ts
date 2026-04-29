@@ -84,6 +84,8 @@ export default defineNuxtConfig({
     AWSAccessKeyId: process.env.AWSAccessKeyId,
     AWSSecretKey: process.env.AWSSecretKey,
     SESSION_SECRET: process.env.SESSION_SECRET,
+    S3_BUCKET_NAME: process.env.S3_BUCKET_NAME,
+    AWS_REGION: process.env.AWS_REGION,
     public: {
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || process.env.BASE_URL || 'http://localhost:3600',
       googleClientId: process.env.GOOGLE_CLIENT_ID,

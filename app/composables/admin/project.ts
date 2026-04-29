@@ -47,15 +47,25 @@ export const useAdminProjectStore = defineStore('adminProject', () => {
       let uploadedFiles: string | null = null
       let deleteFiles = false
 
-      if (project.images[0] !== undefined && typeof project.images[0].location === 'undefined') {
-        for (let i = 0; i < project.images.length; i++) {
-          data.append('images', project.images[i])
+      // Check if images array exists and has items
+      if (project.images && Array.isArray(project.images) && project.images.length > 0) {
+        if (typeof project.images[0].location === 'undefined') {
+          // New files to upload
+          for (let i = 0; i < project.images.length; i++) {
+            data.append('images', project.images[i])
+          }
           uploadedFiles = JSON.stringify(project.uploadedFiles)
           deleteFiles = true
         }
+        else {
+          // Existing images (already have location)
+          uploadedFiles = JSON.stringify(project.images)
+          data.append('images', uploadedFiles)
+        }
       }
       else {
-        uploadedFiles = JSON.stringify(project.images)
+        // No images
+        uploadedFiles = '[]'
         data.append('images', uploadedFiles)
       }
 
@@ -63,25 +73,39 @@ export const useAdminProjectStore = defineStore('adminProject', () => {
       data.append('categoryID', project.category)
       data.append('createdAt', project.createdAt)
       data.append('description', project.description)
-      data.append('promoVideoLink', project.promoVideoLink)
-      data.append('productLink', project.productLink)
-      data.append('requirements', JSON.stringify(project.requirements))
+      data.append('promoVideoLink', project.promoVideoLink || '')
+      data.append('productLink', project.productLink || '')
+      data.append('requirements', JSON.stringify(project.requirements || []))
       data.append('status', project.status)
-      data.append('subtitle', project.subtitle)
+      data.append('subtitle', project.subtitle || '')
       data.append('title', project.title)
-      data.append('storageLocation', project.storageLocation)
-      data.append('storageLocationNew', project.storageLocationNew)
+      data.append('storageLocation', project.storageLocation || '')
+      data.append('storageLocationNew', project.storageLocationNew || '')
       data.append('updatedAt', project.updatedAt)
-      data.append('wsl', JSON.stringify(project.wsl))
+      data.append('wsl', JSON.stringify(project.wsl || []))
 
-      const headers = {
-        storagelocation: project.storageLocation,
-        storagelocationnew: project.storageLocationNew,
-        uploadedfiles: uploadedFiles ?? '',
-        deletefiles: String(deleteFiles),
+      // Use native fetch instead of $fetch to better handle FormData
+      const response = await fetch(`/api/projects/${project._id}`, {
+        method: 'PATCH',
+        body: data,
+        // Don't set Content-Type header - browser will set it with boundary
+      })
+
+      if (!response.ok) {
+        // Try to get error details from response
+        let errorDetails = ''
+        try {
+          const errorData = await response.json()
+          errorDetails = errorData.message || errorData.statusMessage || 'Unknown server error'
+        }
+        catch {
+          errorDetails = `Server responded with ${response.status} ${response.statusText}`
+        }
+        console.error('Server error:', errorDetails)
+        throw new Error(errorDetails)
       }
 
-      const updated = await $fetch<any>(`/api/projects/${project._id}`, { method: 'PATCH', body: data, headers })
+      const updated = await response.json()
       item.value = updated
 
       push.success({
@@ -92,7 +116,15 @@ export const useAdminProjectStore = defineStore('adminProject', () => {
       return updated
     }
     catch (error: any) {
-      const message = error?.data?.message ?? 'Failed to update project. Please try again.'
+      // Log the actual error for debugging
+      console.error('Update project error:', error)
+
+      // Try to get the actual error message from different sources
+      const message = error?.message
+        || error?.data?.message
+        || error?.response?.data?.message
+        || 'Failed to update project. Please try again.'
+
       push.error({
         title: 'Update Failed',
         message,

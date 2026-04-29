@@ -1,6 +1,10 @@
 import type { H3Event } from 'h3'
 
+import type { MultipartFile } from '~~/server/utils/s3-upload'
+
+import { Buffer } from 'node:buffer'
 import ProjectModel from '~~/server/models/project'
+import { uploadToS3 } from '~~/server/utils/s3-upload'
 import { generateUniqueSlug } from '~~/server/utils/slug'
 import { getRouterParam } from '#imports'
 
@@ -122,10 +126,127 @@ export async function createProject(event: H3Event) {
 
 export async function updateProject(event: H3Event) {
   const projectId = getRouterParam(event, 'id')
-  const projectData = await readBody(event)
 
-  projectData.requirements = typeof projectData.requirements === 'string' ? JSON.parse(projectData.requirements) : projectData.requirements
-  projectData.wsl = typeof projectData.wsl === 'string' ? JSON.parse(projectData.wsl) : projectData.wsl
+  // Handle both JSON and FormData
+  const contentType = getHeader(event, 'content-type') || ''
+  let projectData: any
+
+  if (contentType.includes('multipart/form-data')) {
+    const formData = await readMultipartFormData(event)
+    if (!formData) {
+      throw createError({ statusCode: 400, message: 'Invalid form data' })
+    }
+
+    // Extract text fields from FormData first
+    const getField = (name: string) => {
+      const field = formData.find(f => f.name === name)
+      return field?.data.toString() || ''
+    }
+
+    // Collect image files for upload
+    const imageFiles = formData.filter(item =>
+      item.name === 'images' && item.data,
+    )
+
+    let uploadedImages: any[] = []
+
+    // If there are new images to upload, use the upload API endpoint
+    if (imageFiles.length > 0) {
+      try {
+        // Create a new FormData to send to the upload endpoint
+        const uploadFormData = new FormData()
+        imageFiles.forEach((file) => {
+          // Convert Buffer to File/Blob for the upload endpoint
+          const fileData = Buffer.from(file.data)
+          const blob = new Blob([fileData], { type: file.type || 'application/octet-stream' })
+          uploadFormData.append('files', blob, file.filename)
+        })
+
+        uploadFormData.append('storageLocation', getField('storageLocation'))
+
+        // Get the base URL for internal API calls
+        const baseUrl = process.env.NUXT_PUBLIC_SITE_URL
+          || process.env.BASE_URL
+          || 'http://localhost:3400'
+
+        // Call the upload API endpoint using native fetch
+        const uploadResponse = await fetch(`${baseUrl}/api/upload`, {
+          method: 'POST',
+          body: uploadFormData,
+          // Don't set Content-Type - let the browser/node set it with boundary
+        })
+
+        if (!uploadResponse.ok) {
+          const errorData = await uploadResponse.json().catch(() => ({}))
+          throw new Error(errorData.statusMessage || 'Upload failed')
+        }
+
+        const result = await uploadResponse.json()
+
+        // Extract the uploaded file information
+        if (result.success && result.files) {
+          uploadedImages = result.files.map((file: any) => ({
+            location: file.fileUrl,
+            key: file.fileName,
+            size: file.fileSize,
+            mimeType: file.mimeType,
+          }))
+        }
+      }
+      catch (uploadError) {
+        console.error('Failed to upload images:', uploadError)
+        throw createError({
+          statusCode: 500,
+          message: uploadError instanceof Error ? uploadError.message : 'Failed to upload images to S3',
+        })
+      }
+    }
+
+    projectData = {
+      authorID: getField('authorID'),
+      categoryID: getField('categoryID'),
+      createdAt: getField('createdAt'),
+      description: getField('description'),
+      promoVideoLink: getField('promoVideoLink'),
+      productLink: getField('productLink'),
+      requirements: getField('requirements'),
+      status: getField('status'),
+      subtitle: getField('subtitle'),
+      title: getField('title'),
+      storageLocation: getField('storageLocation'),
+      storageLocationNew: getField('storageLocationNew'),
+      updatedAt: getField('updatedAt'),
+      wsl: getField('wsl'),
+    }
+
+    // Add uploaded images to project data
+    if (uploadedImages.length > 0) {
+      projectData.images = uploadedImages
+    }
+  }
+  else {
+    projectData = await readBody(event)
+  }
+
+  // Parse JSON strings safely
+  try {
+    projectData.requirements = typeof projectData.requirements === 'string'
+      ? JSON.parse(projectData.requirements)
+      : projectData.requirements
+  }
+  catch {
+    projectData.requirements = []
+  }
+
+  try {
+    projectData.wsl = typeof projectData.wsl === 'string'
+      ? JSON.parse(projectData.wsl)
+      : projectData.wsl
+  }
+  catch {
+    projectData.wsl = []
+  }
+
   projectData.updatedAt = Date.now()
 
   const project = await ProjectModel.findById(projectId).populate('category').exec()

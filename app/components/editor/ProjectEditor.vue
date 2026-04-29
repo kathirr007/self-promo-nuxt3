@@ -13,7 +13,9 @@ const emit = defineEmits<{
 
 const editor = useEditor({
   extensions: [
-    StarterKit,
+    StarterKit.configure({
+      underline: false,
+    }),
     Underline,
   ],
   content: props.initialContent || '',
