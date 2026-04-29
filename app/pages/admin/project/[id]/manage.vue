@@ -67,8 +67,12 @@ async function generateProjectSlug() {
   }
 }
 
-function handleProjectImageUpdate({ index, field }: { index: number, field: string }) {
-  adminProjectStore.removeProjectImage(field, index)
+function handleProjectImageUpdate({ index, field, s3Key }: { index: number, field: string, s3Key?: string }) {
+  // This event is no longer used as deletion is handled in LandingPage component
+  // Kept for potential future use or other components
+  if (s3Key) {
+    console.log('Image deletion with S3 key:', { index, field, s3Key })
+  }
 }
 
 function handleProjectUpdate({ value, field }: { value: any, field: string }) {

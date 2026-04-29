@@ -5,6 +5,7 @@ const props = defineProps<LandingPageProps>()
 
 const emit = defineEmits<LandingPageEmits>()
 
+const adminProjectStore = useAdminProjectStore()
 const categoryStore = useCategoryStore()
 const categories = computed(() => categoryStore.items)
 
@@ -34,6 +35,7 @@ function formatNames(files: File[]): string {
 function imagesAdd(event: Event) {
   const files = Array.from((event.target as HTMLInputElement).files ?? [])
   image.value = files.map(f => URL.createObjectURL(f))
+  adminProjectStore.updateUploadedFiles(uploadedFiles)
 }
 
 function removeImage(index: number) {
@@ -44,8 +46,40 @@ async function removeS3Image(index: number, field: string) {
   const item = uploadedFiles.value.at(index)
   if (!item)
     return
-  uploadedFiles.value.splice(index, 1)
-  emit('projectImageUpdated', { index, field })
+
+  // Extract S3 key from the location URL
+  // URL format: https://bucket.s3.region.amazonaws.com/folder/filename.jpg
+  // We need: folder/filename.jpg
+  let s3Key = ''
+  let key = ''
+  try {
+    const url = new URL(item.location)
+    // Remove leading slash if present
+    s3Key = url.pathname.substring(1)
+    key = s3Key.substring(s3Key.lastIndexOf('/') + 1)
+  }
+  catch (error) {
+    console.error('Failed to parse S3 URL:', error)
+    return
+  }
+
+  try {
+    // Call backend to delete from S3 and database
+    await adminProjectStore.deleteProjectImage({
+      field,
+      index,
+      s3Key,
+      projectId: (props.project as Record<string, any>)._id,
+      key,
+    })
+
+    // Remove from frontend after successful backend deletion
+    uploadedFiles.value.splice(index, 1)
+  }
+  catch (error) {
+    console.error('Failed to delete image:', error)
+    // Error notification is already handled in the store
+  }
 }
 
 function emitProjectValue(e: Event | string, field: string) {

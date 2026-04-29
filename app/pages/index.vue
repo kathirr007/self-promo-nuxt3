@@ -20,14 +20,14 @@ const projectHeroes = computed(() => heroesStore.projectHero ? Array.isArray(her
 
 <template>
   <div>
-    <SharedHeroSlider :heroes="projectHeroes as Hero[]" />
+    <SharedHeroSlider :heroes="(projectHeroes as Hero[])" />
 
     <section class="section p-3">
       <div class="container">
         <h1 class="title my-3">
           Featured Projects
         </h1>
-        <div class="columns is-multiline section-cards">
+        <div v-if="projects.length" class="columns is-multiline section-cards">
           <div
             v-for="project in projects"
             :key="project._id"

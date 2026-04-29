@@ -4,10 +4,10 @@ import multerS3 from 'multer-s3'
 
 // Configure AWS S3 Client with v3 SDK
 const s3Client = new S3Client({
-  region: useRuntimeConfig().awsRegion || 'us-east-1',
+  region: useRuntimeConfig().AWS_REGION || 'us-east-2',
   credentials: {
-    accessKeyId: useRuntimeConfig().awsAccessKeyId,
-    secretAccessKey: useRuntimeConfig().awsSecretKey,
+    accessKeyId: useRuntimeConfig().AWSAccessKeyId,
+    secretAccessKey: useRuntimeConfig().AWSSecretKey,
   },
 })
 
@@ -47,7 +47,7 @@ async function deleteImages(event: any): Promise<void> {
       console.log(err)
       throw createError({
         statusCode: 500,
-        statusMessage: 'Failed to delete images',
+        statusMessage: err instanceof Error ? err.message : 'Failed to delete images',
       })
     }
   }

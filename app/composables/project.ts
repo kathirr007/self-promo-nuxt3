@@ -6,7 +6,7 @@ export const useProjectStore = defineStore('project', () => {
 
   async function fetchProjects() {
     try {
-      const projects = await $fetch<any[]>('/api/projects')
+      const { projects } = await $fetch<Record<string, any>>('/api/projects')
       items.value = projects
       return projects
     }

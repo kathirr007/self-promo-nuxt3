@@ -36,7 +36,7 @@ const vfOptions = shallowReactive({
 })
 
 const vfRscs = computed(() =>
-  props.project.images
+  (props.project.images || [])
     .filter(img => !!img.location)
     .map((img, index) => new Img(img.location, `${props.project.title} image ${index + 1}`)),
 )

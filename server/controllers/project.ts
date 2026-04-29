@@ -4,6 +4,7 @@ import type { MultipartFile } from '~~/server/utils/s3-upload'
 
 import { Buffer } from 'node:buffer'
 import ProjectModel from '~~/server/models/project'
+import { deleteFromS3 } from '~~/server/utils/s3'
 import { uploadToS3 } from '~~/server/utils/s3-upload'
 import { generateUniqueSlug } from '~~/server/utils/slug'
 import { getRouterParam } from '#imports'
@@ -275,25 +276,47 @@ export async function deleteProject(event: H3Event) {
 
 export async function deleteProjectImage(event: H3Event) {
   try {
-    const imageId = getRouterParam(event, 'id')
-    const { field, index } = await readBody(event)
+    const imageId = getRouterParam(event, 'imageId')
+    const projectId = getRouterParam(event, 'id')
+    const { field, index, s3Key } = await readBody(event)
 
-    const project = await ProjectModel.findById(imageId)
+    console.log('Delete project image request:', { imageId, field, index, s3Key })
+
+    const project = await ProjectModel.findById(projectId)
     if (!project) {
       throw createError({ statusCode: 404, message: 'Project not found' })
     }
 
+    // Delete from S3 if s3Key is provided (for existing uploaded images)
+    if (s3Key) {
+      try {
+        await deleteFromS3(s3Key)
+        console.log(`Successfully deleted from S3: ${s3Key}`)
+      }
+      catch (s3Error) {
+        console.error(`Failed to delete from S3: ${s3Key}`, s3Error)
+        // Continue with database update even if S3 deletion fails
+      }
+    }
+
+    // Remove from database
     if (field === 'images' && Array.isArray(project.images)) {
+      console.log(`Before splice - images count: ${project.images.length}, removing index: ${index}`)
       project.images.splice(index, 1)
+      // Mark the array as modified to ensure Mongoose saves the change
+      project.markModified('images')
+      console.log(`After splice - images count: ${project.images.length}`)
     }
     else if (field === 'image') {
       project.image = ''
     }
 
     await project.save()
+    console.log('Project saved successfully after image deletion')
     return { status: true, message: 'Image deleted successfully' }
   }
   catch (error) {
+    console.error('Error in deleteProjectImage:', error)
     throw createError({ statusCode: 500, message: error instanceof Error ? error.message : 'Failed to delete project image' })
   }
 }

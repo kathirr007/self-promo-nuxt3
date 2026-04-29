@@ -84,11 +84,19 @@ export const useAdminProjectStore = defineStore('adminProject', () => {
       data.append('updatedAt', project.updatedAt)
       data.append('wsl', JSON.stringify(project.wsl || []))
 
+      const headers = {
+        storagelocation: project.storageLocation,
+        storagelocationnew: project.storageLocationNew,
+        uploadedfiles: uploadedFiles,
+        deletefiles: String(deleteFiles),
+      }
+
       // Use native fetch instead of $fetch to better handle FormData
       const response = await fetch(`/api/projects/${project._id}`, {
         method: 'PATCH',
         body: data,
         // Don't set Content-Type header - browser will set it with boundary
+        headers,
       })
 
       if (!response.ok) {
@@ -134,9 +142,16 @@ export const useAdminProjectStore = defineStore('adminProject', () => {
     }
   }
 
-  async function deleteProjectImage(params: { key: string, s3Key: string }) {
+  async function deleteProjectImage(params: { field: string, index: number, s3Key: string, projectId: string, key: string }) {
     try {
-      await $fetch(`/api/projects/ProdImage/${params.key}`, { method: 'DELETE', headers: { storagelocation: params.s3Key } })
+      await $fetch(`/api/projects/${params.projectId}/prod-image/${params.key}`, {
+        method: 'DELETE',
+        body: {
+          field: params.field,
+          index: params.index,
+          s3Key: params.s3Key,
+        },
+      })
       canUpdateProject.value = true
       push.success({
         title: 'Image Deleted',
