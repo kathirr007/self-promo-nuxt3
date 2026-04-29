@@ -1,7 +1,7 @@
-import type { MultipartFile } from '~~/server/utils/s3-upload'
+import type { MultipartFile } from '~~/server/utils/s3'
 import type { UploadedFile, UploadResponse } from '~~/types/upload'
 import { readMultipartFormData } from 'h3'
-import { fileValidation, uploadToS3, validateFile } from '~~/server/utils/s3-upload'
+import { fileValidation, uploadToS3, validateFile } from '~~/server/utils/s3'
 
 export default defineEventHandler(async (event): Promise<UploadResponse> => {
   try {

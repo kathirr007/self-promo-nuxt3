@@ -1,16 +1,26 @@
-import type { Buffer } from 'node:buffer'
+import type { FileValidation, S3UploadResult } from '~~/types/upload'
+import { Buffer } from 'node:buffer'
 import { DeleteObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
+
+// Define MultipartFile interface for h3 multipart form data
+export interface MultipartFile {
+  name: string
+  filename?: string
+  type?: string
+  size: number
+  arrayBuffer: () => Promise<ArrayBuffer>
+}
 
 // Log configuration for debugging (remove in production)
 console.log('S3 Configuration:', {
-  region: process.env.AWSRegion || 'us-east-2',
+  region: process.env.AWS_REGION || process.env.AWSRegion || 'us-east-2',
   hasAccessKey: !!process.env.AWSAccessKeyId,
   hasSecretKey: !!process.env.AWSSecretKey,
-  bucket: 'kathirr007-portfolio',
+  bucket: process.env.S3_BUCKET_NAME || 'kathirr007-portfolio',
 })
 
 const s3Client = new S3Client({
-  region: process.env.AWSRegion || 'us-east-2',
+  region: process.env.AWS_REGION || process.env.AWSRegion || 'us-east-2',
   credentials: {
     accessKeyId: process.env.AWSAccessKeyId || '',
     secretAccessKey: process.env.AWSSecretKey || '',
@@ -19,7 +29,24 @@ const s3Client = new S3Client({
   forcePathStyle: false,
 })
 
-const BUCKET_NAME = 'kathirr007-portfolio'
+const BUCKET_NAME = process.env.S3_BUCKET_NAME || 'kathirr007-portfolio'
+
+// File validation configuration
+export const fileValidation: FileValidation = {
+  maxSize: 10 * 1024 * 1024, // 10MB
+  maxFiles: 10,
+  allowedTypes: ['jpeg', 'jpg', 'png', 'gif', 'pdf', 'doc', 'docx', 'txt'],
+  allowedMimeTypes: [
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/gif',
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'text/plain',
+  ],
+}
 
 /**
  * Detect MIME type from buffer magic bytes
@@ -69,18 +96,95 @@ function getExtensionFromMimeType(mimeType: string): string {
   return mimeToExt[mimeType] || 'jpg'
 }
 
-export async function uploadToS3_2(fileBuffer: Buffer, folderPath?: string) {
+/**
+ * Generate unique file key with timestamp and random suffix
+ * @param originalName - Original filename
+ * @returns Unique S3 key
+ */
+export function generateFileKey(originalName: string): string {
+  const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`
+  const extension = originalName.split('.').pop() || ''
+  const baseName = originalName.replace(/\.[^/.]+$/, '').replace(/[^a-z0-9]/gi, '_')
+  return `${uniqueSuffix}-${baseName}.${extension}`
+}
+
+/**
+ * Validate uploaded file
+ * @param file - File to validate
+ * @returns Validation result with error message if invalid
+ */
+export function validateFile(file: MultipartFile): { valid: boolean, error?: string } {
+  // Check file size
+  if (file.size > fileValidation.maxSize) {
+    return {
+      valid: false,
+      error: `File "${file.filename}" is too large. Maximum size is ${Math.round(fileValidation.maxSize / (1024 * 1024))}MB.`,
+    }
+  }
+
+  // Check file extension
+  const extension = file.filename?.split('.').pop()?.toLowerCase()
+  if (!extension || !fileValidation.allowedTypes.includes(extension)) {
+    return {
+      valid: false,
+      error: `File "${file.filename}" has an unsupported format. Allowed: ${fileValidation.allowedTypes.join(', ')}`,
+    }
+  }
+
+  // Check MIME type
+  if (file.type && !fileValidation.allowedMimeTypes.includes(file.type)) {
+    return {
+      valid: false,
+      error: `File "${file.filename}" has an unsupported MIME type.`,
+    }
+  }
+
+  return { valid: true }
+}
+
+/**
+ * Upload file buffer to S3 with automatic MIME type detection
+ * @param fileBuffer - File buffer to upload
+ * @param folderPath - Optional folder path for organizing files
+ * @returns Upload result with location and metadata
+ */
+export async function uploadToS3(fileBuffer: Buffer, folderPath?: string): Promise<S3UploadResult>
+/**
+ * Upload MultipartFile to S3 using provided MIME type
+ * @param file - MultipartFile object from h3
+ * @param folderPath - Optional folder path for organizing files
+ * @returns Upload result with location and metadata
+ */
+export async function uploadToS3(file: MultipartFile, folderPath?: string): Promise<S3UploadResult>
+export async function uploadToS3(fileOrBuffer: Buffer | MultipartFile, folderPath?: string): Promise<S3UploadResult> {
   try {
-    // Detect MIME type from buffer
-    const mimeType = detectMimeType(fileBuffer)
+    let fileBuffer: Buffer
+    let mimeType: string
+    let originalName: string
+    let key: string
 
-    // Get file extension and create unique filename
-    const extension = getExtensionFromMimeType(mimeType)
-    const timestamp = Date.now().toString()
-    const uniqueFilename = `${timestamp}.${extension}`
-
-    // Build the S3 key with optional folder path
-    const key = folderPath ? `${folderPath}/${uniqueFilename}` : uniqueFilename
+    // Handle both Buffer and MultipartFile inputs
+    if (Buffer.isBuffer(fileOrBuffer)) {
+      // Direct buffer upload with MIME type detection
+      fileBuffer = fileOrBuffer
+      mimeType = detectMimeType(fileBuffer)
+      const extension = getExtensionFromMimeType(mimeType)
+      const timestamp = Date.now().toString()
+      const uniqueFilename = `${timestamp}.${extension}`
+      key = folderPath ? `${folderPath}/${uniqueFilename}` : uniqueFilename
+      originalName = uniqueFilename
+    }
+    else {
+      // MultipartFile upload with provided MIME type
+      const file = fileOrBuffer
+      fileBuffer = Buffer.from(await file.arrayBuffer())
+      mimeType = file.type || detectMimeType(fileBuffer)
+      originalName = file.filename || 'unknown'
+      key = generateFileKey(originalName)
+      if (folderPath) {
+        key = `${folderPath}/${key}`
+      }
+    }
 
     console.log('Uploading to S3:', {
       bucket: BUCKET_NAME,
@@ -95,34 +199,61 @@ export async function uploadToS3_2(fileBuffer: Buffer, folderPath?: string) {
       Body: fileBuffer,
       ACL: 'public-read',
       ContentType: mimeType,
+      Metadata: {
+        originalName,
+        uploadedAt: new Date().toISOString(),
+      },
     })
 
-    await s3Client.send(command)
+    const response = await s3Client.send(command)
 
     return {
-      location: `https://${BUCKET_NAME}.s3.${process.env.AWSRegion || 'us-east-2'}.amazonaws.com/${key}`,
+      bucket: BUCKET_NAME,
       key,
+      location: `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION || process.env.AWSRegion || 'us-east-2'}.amazonaws.com/${key}`,
+      etag: response.ETag || '',
       size: fileBuffer.length,
-      mimeType,
     }
   }
   catch (error: any) {
     console.error('S3 Upload Error:', {
       message: error.message,
       code: error.Code || error.code,
-      region: process.env.AWSRegion || 'us-east-2',
+      region: process.env.AWS_REGION || process.env.AWSRegion || 'us-east-2',
       bucket: BUCKET_NAME,
       stack: error.stack,
     })
-    throw error
+    throw new Error(`Failed to upload file to S3: ${error.message}`)
   }
 }
 
-export async function deleteFromS3(key: string) {
-  const command = new DeleteObjectCommand({
-    Bucket: BUCKET_NAME,
-    Key: key,
-  })
+/**
+ * Delete file from S3
+ * @param key - S3 object key to delete
+ */
+export async function deleteFromS3(key: string): Promise<void> {
+  try {
+    console.log('Deleting from S3:', {
+      bucket: BUCKET_NAME,
+      key,
+    })
 
-  await s3Client.send(command)
+    const command = new DeleteObjectCommand({
+      Bucket: BUCKET_NAME,
+      Key: key,
+    })
+
+    await s3Client.send(command)
+
+    console.log('Successfully deleted from S3:', key)
+  }
+  catch (error: any) {
+    console.error('S3 Delete Error:', {
+      message: error.message,
+      code: error.Code || error.code,
+      key,
+      bucket: BUCKET_NAME,
+    })
+    throw new Error(`Failed to delete file from S3: ${error.message}`)
+  }
 }

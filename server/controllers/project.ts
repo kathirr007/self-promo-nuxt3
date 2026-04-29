@@ -1,11 +1,10 @@
 import type { H3Event } from 'h3'
 
-import type { MultipartFile } from '~~/server/utils/s3-upload'
+import type { MultipartFile } from '~~/server/utils/s3'
 
 import { Buffer } from 'node:buffer'
 import ProjectModel from '~~/server/models/project'
-import { deleteFromS3 } from '~~/server/utils/s3'
-import { uploadToS3 } from '~~/server/utils/s3-upload'
+import { deleteFromS3, uploadToS3 } from '~~/server/utils/s3'
 import { generateUniqueSlug } from '~~/server/utils/slug'
 import { getRouterParam } from '#imports'
 
