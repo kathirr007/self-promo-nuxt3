@@ -85,16 +85,17 @@ async function updateProject() {
     await adminProjectStore.updateProject()
     // After successful update, refetch the project to get the latest data from server
     await adminProjectStore.fetchProjectById(route.params.id as string)
-    
+
     // Wait a tick for Vue to update the DOM and props
     await nextTick()
-    
+
     // If the active component is LandingPage, refresh its images
     if (activeComponentRef.value?.refreshImages) {
       console.log('Refreshing images in LandingPage component')
       activeComponentRef.value.refreshImages()
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to update project:', error)
     // Error is already handled in the store
   }
@@ -144,39 +145,7 @@ async function publishProject({ closeModal }: { closeModal: () => void }) {
             Save
           </button>
         </div>
-        <div class="full-page-takeover-header-button">
-          <SharedModal
-            open-title="Publish"
-            open-btn-class="button is-success"
-            title="Publish Project"
-            @opened="generateProjectSlug"
-            @submitted="publishProject"
-          >
-            <div>
-              <div class="title">
-                Once you publish this project, it will be visible on the public site.
-              </div>
-              <div v-if="project?.title">
-                <div class="subtitle">
-                  This is how the URL to your project will look like:
-                </div>
-                <div v-if="isGeneratingSlug" class="has-text-centered py-3">
-                  <span class="icon">
-                    <Icon name="line-md:loading-twotone-loop" class="text-xl" />
-                  </span>
-                  <span class="ml-2">Generating unique URL...</span>
-                </div>
-                <ClientOnly v-else>
-                  <article class="message is-success">
-                    <div class="message-body">
-                      <strong>{{ getCurrentUrl() }}/projects/{{ generatedSlug }}</strong>
-                    </div>
-                  </article>
-                </ClientOnly>
-              </div>
-            </div>
-          </SharedModal>
-        </div>
+
         <div class="full-page-takeover-header-button">
           <SharedModal
             open-title="Favorite"
@@ -247,7 +216,6 @@ async function publishProject({ closeModal }: { closeModal: () => void }) {
               </Transition>
             </KeepAlive>
           </div>
-
         </div>
       </div>
     </div>

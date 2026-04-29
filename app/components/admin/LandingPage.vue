@@ -31,41 +31,27 @@ onMounted(() => {
 
 // Watch for changes in project.images to refresh after save
 watch(() => props.project?.images, (newImages, oldImages) => {
-  console.log('Image change detected:', {
-    newImagesLength: newImages?.length,
-    oldImagesLength: oldImages?.length,
-    hasLocation: newImages && Array.isArray(newImages) && newImages.length > 0 && typeof newImages[0]?.location !== 'undefined',
-    newImagesType: newImages?.[0]?.constructor?.name,
-  })
-
   // Check if images changed from Files to uploaded objects with location
   const hasLocation = newImages && Array.isArray(newImages) && newImages.length > 0 && typeof newImages[0]?.location !== 'undefined'
 
   // Reload if we now have server-uploaded images (with location property)
   if (hasLocation) {
-    console.log('Reloading images from server response')
     loadExistingImages()
   }
 }, { deep: true, immediate: false })
 
 function loadExistingImages() {
-  console.log('Loading existing images, project.images:', props.project.images)
   const firstImage = props.project.images?.at(0)
   if (firstImage !== undefined && typeof firstImage.location !== 'undefined') {
-    console.log('Found server-uploaded images:', props.project.images.length)
     uploadedFiles.value = [...props.project.images]
-    selectedFilesCount.value = uploadedFiles.value.length
+    /* selectedFilesCount.value = uploadedFiles.value.length
     selectedFileName.value = uploadedFiles.value.length === 1
       ? (uploadedFiles.value[0]?.originalname ?? 'No file chosen')
-      : 'No file chosen'
+      : 'No file chosen' */
     // Clear any temporary blob URLs
     image.value = []
     filesToSubmit.value = []
     hasNewFiles.value = false
-    console.log('Loaded', uploadedFiles.value.length, 'images from server')
-  }
-  else {
-    console.log('No server-uploaded images found, firstImage:', firstImage)
   }
 }
 
