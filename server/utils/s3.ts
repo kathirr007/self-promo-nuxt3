@@ -25,8 +25,8 @@ const BUCKET_NAME = process.env.S3_BUCKET_NAME || 'kathirr007-portfolio'
 
 // File validation configuration
 export const fileValidation: FileValidation = {
-  maxSize: 10 * 1024 * 1024, // 10MB
-  maxFiles: 10,
+  maxSize: 100 * 1024 * 1024, // 100MB
+  maxFiles: 50,
   allowedTypes: ['jpeg', 'jpg', 'png', 'gif', 'pdf', 'doc', 'docx', 'txt'],
   allowedMimeTypes: [
     'image/jpeg',

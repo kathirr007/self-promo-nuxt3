@@ -43,6 +43,10 @@ function openModal() {
   isOpen.value = true
   emit('opened')
 }
+
+defineExpose({
+  openModal,
+})
 </script>
 
 <template>
