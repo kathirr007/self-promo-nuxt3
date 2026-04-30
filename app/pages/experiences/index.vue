@@ -59,29 +59,33 @@ async function fetchExperiences() {
         </h1>
         <div class="columns is-multiline section-cards">
           <div class="column is-8 infinite-loader">
-            <div
-              v-for="experience in publishedExperiences"
-              :key="experience.slug"
-              class="section"
-            >
-              <transition appear name="slideDown" mode="out-in">
-                <div class="experience">
-                  <div
-                    class="experience-header clickable"
-                    tabindex="0"
-                    @click="router.push(`/experiences/${experience.slug}`)"
-                    @keypress.enter="router.push(`/experiences/${experience.slug}`)"
-                  >
-                    <h2 class="title is-4">
-                      {{ displayExperienceTitle(experience) }}
-                    </h2>
-                    <h3 class="subtitle is-5">
-                      {{ experience.subtitle }}
-                    </h3>
-                  </div>
+            <transition name="page-fade" mode="out-in">
+              <div :key="currentPage" class="experiences-list">
+                <div
+                  v-for="experience in publishedExperiences"
+                  :key="experience.slug"
+                  class="section"
+                >
+                  <transition appear name="slideDown" mode="out-in">
+                    <div class="experience">
+                      <div
+                        class="experience-header clickable"
+                        tabindex="0"
+                        @click="router.push(`/experiences/${experience.slug}`)"
+                        @keypress.enter="router.push(`/experiences/${experience.slug}`)"
+                      >
+                        <h2 class="title is-4">
+                          {{ displayExperienceTitle(experience) }}
+                        </h2>
+                        <h3 class="subtitle is-5">
+                          {{ experience.subtitle }}
+                        </h3>
+                      </div>
+                    </div>
+                  </transition>
                 </div>
-              </transition>
-            </div>
+              </div>
+            </transition>
 
             <div v-if="pagination.pageCount && pagination.pageCount > 1" class="section has-text-centered-mobile">
               <nav class="pagination" role="navigation" aria-label="pagination">
@@ -199,5 +203,9 @@ a {
   background-color: #d74436;
   border-color: #d74436;
   color: #fff;
+}
+
+.experiences-list {
+  min-height: 200px;
 }
 </style>
