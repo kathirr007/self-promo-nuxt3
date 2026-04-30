@@ -1,6 +1,6 @@
 import type { FileValidation, S3UploadResult } from '~~/types/upload'
 import { Buffer } from 'node:buffer'
-import { DeleteObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import { DeleteObjectCommand, DeleteObjectsCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 
 // Define MultipartFile interface for h3 multipart form data
 export interface MultipartFile {
@@ -222,5 +222,49 @@ export async function deleteFromS3(key: string): Promise<void> {
   catch (error: any) {
     console.error('S3 Delete Error:', error.message)
     throw new Error(`Failed to delete file from S3: ${error.message}`)
+  }
+}
+
+/**
+ * Delete multiple images from S3
+ * @param objectKeys - Array of S3 object keys to delete
+ */
+export async function deleteImagesFromS3(objectKeys: string[]): Promise<void> {
+  if (!objectKeys || objectKeys.length === 0) {
+    return
+  }
+
+  try {
+    const objects = objectKeys.map(key => ({ Key: key }))
+    const command = new DeleteObjectsCommand({
+      Bucket: BUCKET_NAME,
+      Delete: { Objects: objects, Quiet: true },
+    })
+
+    await s3Client.send(command)
+    console.log(`Successfully deleted ${objectKeys.length} image(s) from S3`)
+  }
+  catch (error: any) {
+    console.error('S3 Batch Delete Error:', error.message)
+    throw new Error(`Failed to delete images from S3: ${error.message}`)
+  }
+}
+
+/**
+ * Extract S3 keys from a document's images array and delete them from S3
+ * @param model - Mongoose model instance with images array
+ * @param imagesField - Name of the images field (default: 'images')
+ */
+export async function deleteDocumentImages(model: any, imagesField: string = 'images'): Promise<void> {
+  if (!model || !model[imagesField] || !Array.isArray(model[imagesField]) || model[imagesField].length === 0) {
+    return
+  }
+
+  const s3Keys = model[imagesField]
+    .map((img: any) => img.key || img.location?.split('/').slice(3).join('/'))
+    .filter(Boolean)
+
+  if (s3Keys.length > 0) {
+    await deleteImagesFromS3(s3Keys)
   }
 }
