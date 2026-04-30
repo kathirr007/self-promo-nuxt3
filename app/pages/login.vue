@@ -119,7 +119,7 @@ async function login() {
           </div>
           <div class="has-text-grey">
             <div v-if="isLoggedIn">
-              <span>{{ authStore.user?.email }}</span>
+              <span>{{ authStore.authUser?.email }}</span>
             </div>
             <div v-else>
               <p class="has-text-gray has-text-centered">
