@@ -13,11 +13,6 @@ export default defineEventHandler(async (event) => {
     case 'PATCH': {
       // PATCH /api/projects/[id]
       await onlyAdmin(event)
-      const projectId = getRouterParam(event, 'id')
-      const project = await ProjectModel.findById(projectId)
-      if (project) {
-        await deleteDocumentImages(project)
-      }
       return await updateProject(event)
     }
 

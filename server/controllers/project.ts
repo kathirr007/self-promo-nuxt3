@@ -4,7 +4,7 @@ import { Buffer } from 'node:buffer'
 import CategoryModel from '~~/server/models/category'
 import ProjectModel from '~~/server/models/project'
 import UserModel from '~~/server/models/user'
-import { deleteFromS3 } from '~~/server/utils/s3'
+import { deleteDocumentImages, deleteFromS3 } from '~~/server/utils/s3'
 import { generateUniqueSlug } from '~~/server/utils/slug'
 import { getRouterParam } from '#imports'
 
@@ -143,23 +143,83 @@ export async function updateProject(event: H3Event) {
       return field?.data.toString() || ''
     }
 
-    // Collect image files for upload
-    const imageFiles = formData.filter(item =>
-      item.name === 'images' && item.data,
+    // Collect NEW image files for upload (only items with filename are actual files)
+    // Important: Must have ALL three conditions to be considered a real file upload
+    const newImageFiles = formData.filter(item =>
+      item.name === 'images' 
+      && item.data 
+      && item.data.length > 0
+      && item.filename
+      && typeof item.filename === 'string'
+      && item.filename.length > 0,
     )
+
+    // Get existing images from the request (sent as JSON string in a non-file field)
+    // Important: Only parse fields that don't have filename (those are JSON strings, not files)
+    const existingImagesField = formData.find(item => 
+      item.name === 'images' 
+      && (!item.filename || item.filename.length === 0) 
+      && item.data
+    )
+    let existingImages: any[] = []
+    if (existingImagesField) {
+      try {
+        const parsed = JSON.parse(existingImagesField.data.toString())
+        existingImages = Array.isArray(parsed) ? parsed : []
+      }
+      catch (parseError) {
+        console.error('Failed to parse existing images JSON:', parseError)
+        existingImages = []
+      }
+    }
 
     let uploadedImages: any[] = []
 
-    // If there are new images to upload, use the upload API endpoint
-    if (imageFiles.length > 0) {
+    // Scenario determination:
+    // 1. No existing images + no new files → skip image operations
+    // 2. No existing images + new files → upload new files only
+    // 3. Existing images + no new files → keep existing images, skip operations
+    // 4. Existing images + new files → delete old from S3, upload new files
+
+    const hasExistingImages = existingImages.length > 0
+    const hasNewFiles = newImageFiles.length > 0
+
+    // Fetch the current project to check what's in the database
+    const currentProject = await ProjectModel.findById(projectId).exec()
+    if (!currentProject) {
+      throw createError({ statusCode: 404, message: 'Project not found' })
+    }
+
+    const dbHasImages = currentProject.images && Array.isArray(currentProject.images) && currentProject.images.length > 0
+    
+    // CRITICAL: Only delete old images from S3 if BOTH conditions are true:
+    // 1. Database has existing images
+    // 2. Request contains NEW file uploads (not just JSON data)
+    // Additional safety: Verify that newImageFiles actually contain valid file data
+    const hasValidNewFiles = hasNewFiles && newImageFiles.every(file => 
+      file.data && file.data.length > 0 && file.filename && file.filename.length > 0
+    )
+    
+    if (dbHasImages && hasValidNewFiles) {
+      try {
+        await deleteDocumentImages(currentProject, 'images')
+      }
+      catch (deleteError) {
+        console.error('Failed to delete old images from S3:', deleteError)
+        // Continue with upload even if delete fails, but log the error
+      }
+    }
+
+    // Upload new images if there are any (scenarios 2 and 4)
+    if (hasNewFiles) {
       try {
         // Create a new FormData to send to the upload endpoint
         const uploadFormData = new FormData()
-        imageFiles.forEach((file) => {
+        newImageFiles.forEach((file) => {
           // Convert Buffer to File/Blob for the upload endpoint
           const fileData = Buffer.from(file.data)
           const blob = new Blob([fileData], { type: file.type || 'application/octet-stream' })
-          uploadFormData.append('files', blob, file.filename)
+          uploadFormData.append('files', blob, file.filename!)
         })
 
         uploadFormData.append('storageLocation', getField('storageLocation'))
@@ -201,6 +261,11 @@ export async function updateProject(event: H3Event) {
         })
       }
     }
+    else if (hasExistingImages) {
+      // Scenario 3: Use existing images from the request
+      uploadedImages = existingImages
+    }
+    // Scenario 1: No images at all, leave uploadedImages as empty array
 
     projectData = {
       authorID: getField('authorID'),
@@ -219,9 +284,12 @@ export async function updateProject(event: H3Event) {
       wsl: getField('wsl'),
     }
 
-    // Add uploaded images to project data
-    if (uploadedImages.length > 0) {
+    // Set images based on the scenario
+    // Only update images field if we have new uploads or explicit existing images
+    if (hasNewFiles || hasExistingImages) {
       projectData.images = uploadedImages
+      // Mark the images field as modified to ensure Mongoose saves the change
+      currentProject.markModified('images')
     }
   }
   else {
@@ -282,8 +350,6 @@ export async function deleteProjectImage(event: H3Event) {
     const projectId = getRouterParam(event, 'id')
     const { field, index, s3Key } = await readBody(event)
 
-    console.log('Delete project image request:', { imageId, field, index, s3Key })
-
     const project = await ProjectModel.findById(projectId)
     if (!project) {
       throw createError({ statusCode: 404, message: 'Project not found' })
@@ -293,7 +359,6 @@ export async function deleteProjectImage(event: H3Event) {
     if (s3Key) {
       try {
         await deleteFromS3(s3Key)
-        console.log(`Successfully deleted from S3: ${s3Key}`)
       }
       catch (s3Error) {
         console.error(`Failed to delete from S3: ${s3Key}`, s3Error)
@@ -303,22 +368,27 @@ export async function deleteProjectImage(event: H3Event) {
 
     // Remove from database
     if (field === 'images' && Array.isArray(project.images)) {
-      console.log(`Before splice - images count: ${project.images.length}, removing index: ${index}`)
       project.images.splice(index, 1)
       // Mark the array as modified to ensure Mongoose saves the change
       project.markModified('images')
-      console.log(`After splice - images count: ${project.images.length}`)
     }
     else if (field === 'image') {
       project.image = ''
     }
 
     await project.save()
-    console.log('Project saved successfully after image deletion')
-    return { status: true, message: 'Image deleted successfully' }
+    
+    return { 
+      success: true, 
+      message: 'Image deleted successfully',
+      remainingImages: project.images?.length || 0,
+    }
   }
   catch (error) {
-    console.error('Error in deleteProjectImage:', error)
-    throw createError({ statusCode: 500, message: error instanceof Error ? error.message : 'Failed to delete project image' })
+    console.error('Error deleting project image:', error)
+    throw createError({ 
+      statusCode: 500, 
+      message: error instanceof Error ? error.message : 'Failed to delete project image' 
+    })
   }
 }
