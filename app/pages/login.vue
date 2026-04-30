@@ -10,6 +10,7 @@ const form = reactive({ email: '', password: '' })
 const errors = reactive({ email: '', password: '' })
 const touched = reactive({ email: false, password: false })
 const isLoggedIn = computed(() => authStore.isAuthenticated)
+const isLoggingIn = ref(false)
 
 function validateEmail() {
   if (!form.email)
@@ -45,12 +46,16 @@ async function login() {
   if (!isFormValid.value)
     return
 
+  isLoggingIn.value = true
   try {
     await authStore.login(form)
     await router.push('/')
   }
   catch {
     errors.email = 'Wrong email or password'
+  }
+  finally {
+    isLoggingIn.value = false
   }
 }
 </script>
@@ -102,12 +107,13 @@ async function login() {
                 </div>
               </div>
               <button
-                :disabled="!isFormValid"
+                :disabled="!isFormValid || isLoggingIn"
                 class="button is-block is-info is-fullwidth"
+                :class="{ 'is-loading': isLoggingIn }"
                 @click.prevent="login"
                 @keyup.enter="login"
               >
-                Login
+                {{ isLoggingIn ? 'Logging in...' : 'Login' }}
               </button>
             </form>
           </div>

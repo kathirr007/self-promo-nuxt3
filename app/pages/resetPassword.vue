@@ -9,6 +9,7 @@ const router = useRouter()
 const form = reactive({ email: '', oldPassword: '', newPassword: '', passwordConfirmation: '' })
 const errors = reactive({ email: '', oldPassword: '', newPassword: '', passwordConfirmation: '' })
 const touched = reactive({ email: false, oldPassword: false, newPassword: false, passwordConfirmation: false })
+const isResetting = ref(false)
 
 function validate() {
   return {
@@ -32,6 +33,7 @@ async function resetPassword() {
   if (!isFormValid.value)
     return
 
+  isResetting.value = true
   try {
     const res = await authStore.resetPassword(form) as any
     if (res?.status !== 'OK') {
@@ -43,6 +45,9 @@ async function resetPassword() {
   }
   catch {
     errors.email = 'Wrong email or password doesn\'t match'
+  }
+  finally {
+    isResetting.value = false
   }
 }
 </script>
@@ -126,12 +131,13 @@ async function resetPassword() {
                 </div>
               </div>
               <button
-                :disabled="!isFormValid"
+                :disabled="!isFormValid || isResetting"
                 class="button is-block is-info is-fullwidth"
+                :class="{ 'is-loading': isResetting }"
                 @click.prevent="resetPassword"
                 @keyup.enter="resetPassword"
               >
-                Reset Password
+                {{ isResetting ? 'Resetting...' : 'Reset Password' }}
               </button>
             </form>
           </div>

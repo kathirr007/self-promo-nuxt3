@@ -19,6 +19,7 @@ const form = reactive({
 
 const errors = reactive({ username: '', name: '', email: '', avatar: '', password: '', passwordConfirmation: '' })
 const touched = reactive({ username: false, name: false, email: false, avatar: false, password: false, passwordConfirmation: false })
+const isRegistering = ref(false)
 
 function validate() {
   return {
@@ -46,12 +47,16 @@ async function register() {
   if (!isFormValid.value)
     return
 
+  isRegistering.value = true
   try {
     await authStore.register(form)
     await router.push('/login')
   }
   catch (error: any) {
     errors.email = error?.message ?? 'Registration failed'
+  }
+  finally {
+    isRegistering.value = false
   }
 }
 </script>
@@ -120,12 +125,13 @@ async function register() {
                 </div>
               </div>
               <button
-                :disabled="!isFormValid"
+                :disabled="!isFormValid || isRegistering"
                 type="submit"
                 class="button is-block is-info is-fullwidth"
+                :class="{ 'is-loading': isRegistering }"
                 @click.prevent="register"
               >
-                Register
+                {{ isRegistering ? 'Registering...' : 'Register' }}
               </button>
             </form>
           </div>
