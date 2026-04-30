@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import type { Swiper as SwiperInstance } from 'swiper/types'
 import type { HeroSliderProps } from '~/types'
-import { Autoplay, Navigation, Pagination } from 'swiper/modules'
 
 const props = withDefaults(defineProps<HeroSliderProps>(), {
   heroes: () => [],
@@ -15,10 +13,9 @@ const slides = ref(Array.from({ length: 10 }))
 const swiper = useSwiper(containerRef, {
   effect: 'creative',
   loop: true,
-  // grabCursor: true,
-  autoplay: {
+  /* autoplay: {
     delay: 5000,
-  },
+  }, */
   pagination: {
     clickable: true,
     el: '.swiper-pagination',
@@ -65,7 +62,7 @@ const heroLink = computed(() => {
                   background: `url(${hero.image || image}) no-repeat top center/cover`,
                 }"
               />
-              <div class="container px-4 py-2">
+              <div class="container px-4 py-4 px-md-6 py-md-6">
                 <h1 class="title">
                   {{ hero.title }}
                 </h1>
@@ -74,7 +71,7 @@ const heroLink = computed(() => {
                 </h2>
                 <NuxtLink
                   :to="hero.project?.slug ? `/projects/${hero.project.slug}` : '/'"
-                  class="button is-danger"
+                  class="button is-danger m-t-md"
                 >
                   Project Details
                 </NuxtLink>
@@ -88,7 +85,7 @@ const heroLink = computed(() => {
 
     <div v-else class="hero-body" :style="{ background: `url(${heroBackground}) no-repeat center center/cover` }">
       <div class="hero-img" />
-      <div class="container px-4 py-2">
+      <div class="container px-4 py-4 px-md-6 py-md-6">
         <h1 class="title">
           {{ heroTitle }}
         </h1>
@@ -162,7 +159,7 @@ const heroLink = computed(() => {
 
 .hero-body {
   position: relative;
-  min-height: 22rem;
+  // min-height: 22rem;
   display: flex;
   align-items: center;
 }
@@ -177,6 +174,8 @@ const heroLink = computed(() => {
 .container {
   position: relative;
   z-index: 1;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .is-black {
@@ -185,18 +184,35 @@ const heroLink = computed(() => {
 
 .title {
   font-size: 25px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  line-height: 1.3;
+  max-width: 100%;
 
   @media screen and (min-width: 576px) {
     font-size: 30px;
+  }
+
+  @media screen and (max-width: 576px) {
+    font-size: 20px;
+    line-height: 1.2;
   }
 }
 
 .subtitle {
   font-size: 22px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.4;
+
+  @media screen and (max-width: 576px) {
+    font-size: 16px;
+  }
 }
 
 swiper-slide {
-  display: flex;
+  // display: flex;
   justify-content: center;
   align-items: center;
   font-size: 18px;

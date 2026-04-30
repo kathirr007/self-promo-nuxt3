@@ -21,7 +21,7 @@ defineProps({
 
 <template>
   <div class="notFoundContainer">
-    <div class="m-b-xxl">
+    <div class="m-b-xxl has-text-centered">
       <h1 class="title" v-html="title" />
       <nuxt-link :to="navigateToPage" class="button is-primary">
         {{

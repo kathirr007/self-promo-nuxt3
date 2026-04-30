@@ -3,15 +3,12 @@ const router = useRouter()
 </script>
 
 <template>
-  <main p="x4 y10" text="center teal-700 dark:gray-200">
-    <div class="text-4xl">
-      <div i-carbon-warning class="inline-block" />
-    </div>
-    <div>Not found</div>
-    <div>
-      <button class="text-sm btn m-3 mt-8" @click="router.back()">
-        Back
-      </button>
-    </div>
-  </main>
+  <div class="container">
+    <SharedErrorView
+      title="Ooooops, the page you are trying to access doesn't exist 😒"
+      status="404"
+      navigate-to-page="/"
+      navigate-to-text="Navigate back to Home Page"
+    />
+  </div>
 </template>
