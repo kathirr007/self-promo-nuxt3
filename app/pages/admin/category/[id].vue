@@ -9,6 +9,7 @@ const { data: category } = await useAsyncData(`category-${route.params.id}`, () 
   categoryStore.fetchCategoryById(route.params.id as string))
 
 const canProceed = ref(false)
+const isUpdating = ref(false)
 const form = reactive({ title: '' })
 
 function mergeFormData({ data, isValid }: { data: { title: string }, isValid: boolean }) {
@@ -19,8 +20,14 @@ function mergeFormData({ data, isValid }: { data: { title: string }, isValid: bo
 async function updateCategory() {
   if (!category.value)
     return
-  await categoryStore.updateCategory({ ...category.value, name: form.title || category.value.name })
-  await router.push('/admin/categories')
+  isUpdating.value = true
+  try {
+    await categoryStore.updateCategory({ ...category.value, name: form.title || category.value.name })
+    await router.push('/admin/categories')
+  }
+  finally {
+    isUpdating.value = false
+  }
 }
 </script>
 
@@ -41,8 +48,13 @@ async function updateCategory() {
               <div class="empty-container" />
             </div>
             <div class="full-page-footer-col">
-              <button :disabled="!canProceed" class="button is-success float-right" @click="updateCategory">
-                Update
+              <button 
+                :disabled="!canProceed || isUpdating" 
+                class="button is-success float-right" 
+                :class="{ 'is-loading': isUpdating }"
+                @click="updateCategory"
+              >
+                {{ isUpdating ? 'Updating...' : 'Update' }}
               </button>
             </div>
           </div>

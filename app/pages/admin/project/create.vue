@@ -17,6 +17,7 @@ const activeStep = ref(1)
 const steps = [AdminProjectCreateStep1, AdminProjectCreateStep2]
 const stepsLength = steps.length
 const canProceed = ref(false)
+const isCreating = ref(false)
 const form = reactive({ title: '', category: '' })
 
 const isFirstStep = computed(() => activeStep.value === 1)
@@ -50,7 +51,13 @@ function _previousStep() {
 }
 
 async function createProject() {
-  await adminProjectStore.createProject(form)
+  isCreating.value = true
+  try {
+    await adminProjectStore.createProject(form)
+  }
+  finally {
+    isCreating.value = false
+  }
 }
 </script>
 
@@ -83,8 +90,15 @@ async function createProject() {
               <button v-if="!isLastStep" :disabled="!canProceed" class="button float-right" @click.prevent="_nextStep" @keyup.enter="_nextStep">
                 Continue
               </button>
-              <button v-else :disabled="!canProceed" class="button is-success float-right" @click="createProject" @keyup.enter="createProject">
-                Confirm
+              <button 
+                v-else 
+                :disabled="!canProceed || isCreating" 
+                class="button is-success float-right" 
+                :class="{ 'is-loading': isCreating }"
+                @click="createProject" 
+                @keyup.enter="createProject"
+              >
+                {{ isCreating ? 'Creating...' : 'Confirm' }}
               </button>
             </div>
           </div>

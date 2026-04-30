@@ -37,6 +37,9 @@ const draftsOptions = createDraftsOptions()
 const { reveal: showDeleteConfirm, isRevealed: isDeleteRevealed, confirm: dialogConfirm, cancel: dialogCancel } = useConfirmDialog()
 const dialogMessage = ref('')
 const deleteTarget = ref<Record<string, any> | null>(null)
+const isDeleting = ref(false)
+const isTogglingFeature = ref(false)
+const togglingExperienceId = ref<string | null>(null)
 
 function publishedOptions(isFeatured: boolean) {
   return createPublishedOptions(isFeatured)
@@ -59,13 +62,27 @@ async function handleCommand(command: string, experience: Record<string, any>) {
     dialogMessage.value = `Are you sure you want to delete "${experience.title}"?`
     const { isCanceled } = await showDeleteConfirm()
     if (!isCanceled && deleteTarget.value) {
-      await adminExperienceStore.deleteExperience(deleteTarget.value)
-      deleteTarget.value = null
+      isDeleting.value = true
+      try {
+        await adminExperienceStore.deleteExperience(deleteTarget.value)
+        deleteTarget.value = null
+      }
+      finally {
+        isDeleting.value = false
+      }
     }
   }
   if (command === commands.TOGGLE_FEATURE) {
     const featured = !experience.featured
-    await adminExperienceStore.updatePublishedExperience(experience._id, { featured })
+    isTogglingFeature.value = true
+    togglingExperienceId.value = experience._id
+    try {
+      await adminExperienceStore.updatePublishedExperience(experience._id, { featured })
+    }
+    finally {
+      isTogglingFeature.value = false
+      togglingExperienceId.value = null
+    }
   }
 }
 </script>
@@ -136,7 +153,10 @@ async function handleCommand(command: string, experience: Record<string, any>) {
                   <h2>{{ displayExperienceTitle(pexperience) }}</h2>
                   <div class="experience-card-footer">
                     <span>Last Edited {{ formatDate(pexperience.updatedAt) }}</span>
-                    <SharedDropdown :items="publishedOptions(pexperience.featured)" @option-changed="handleCommand($event, pexperience)" />
+                    <SharedDropdown 
+                      :items="publishedOptions(pexperience.featured)" 
+                      @option-changed="handleCommand($event, pexperience)" 
+                    />
                   </div>
                 </div>
               </div>

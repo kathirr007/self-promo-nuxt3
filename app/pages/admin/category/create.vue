@@ -3,6 +3,7 @@ definePageMeta({ layout: 'admin', middleware: 'admin' })
 
 const categoryStore = useAdminCategoryStore()
 const canProceed = ref(false)
+const isCreating = ref(false)
 const form = reactive({ title: '' })
 
 function mergeFormData({ data, isValid }: { data: { title: string }, isValid: boolean }) {
@@ -11,7 +12,13 @@ function mergeFormData({ data, isValid }: { data: { title: string }, isValid: bo
 }
 
 async function createCategory() {
-  await categoryStore.createCategory({ name: form.title })
+  isCreating.value = true
+  try {
+    await categoryStore.createCategory({ name: form.title })
+  }
+  finally {
+    isCreating.value = false
+  }
 }
 </script>
 
@@ -29,8 +36,13 @@ async function createCategory() {
               <div class="empty-container" />
             </div>
             <div class="full-page-footer-col">
-              <button :disabled="!canProceed" class="button is-success float-right" @click="createCategory">
-                Confirm
+              <button 
+                :disabled="!canProceed || isCreating" 
+                class="button is-success float-right" 
+                :class="{ 'is-loading': isCreating }"
+                @click="createCategory"
+              >
+                {{ isCreating ? 'Creating...' : 'Confirm' }}
               </button>
             </div>
           </div>

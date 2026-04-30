@@ -14,19 +14,39 @@ const heroes = computed(() => adminStore.heroes)
 const activeHero = computed(() => heroesStore.projectHero)
 
 const modalRefs = ref<Record<string, any>>({})
+const isActivating = ref(false)
+const isDeleting = ref(false)
+const activatingHeroId = ref<string | null>(null)
+const deletingHeroId = ref<string | null>(null)
 
 function openModal(heroId: string) {
   modalRefs.value[heroId]?.openModal()
 }
 
 async function activateHero({ closeModal }: { closeModal: () => void }, heroId: string) {
-  await adminStore.activateHero(heroId)
-  closeModal()
+  isActivating.value = true
+  activatingHeroId.value = heroId
+  try {
+    await adminStore.activateHero(heroId)
+    closeModal()
+  }
+  finally {
+    isActivating.value = false
+    activatingHeroId.value = null
+  }
 }
 
 async function deleteHero({ closeModal }: { closeModal: () => void }, heroId: string) {
-  await adminStore.deleteHero(heroId)
-  closeModal()
+  isDeleting.value = true
+  deletingHeroId.value = heroId
+  try {
+    await adminStore.deleteHero(heroId)
+    closeModal()
+  }
+  finally {
+    isDeleting.value = false
+    deletingHeroId.value = null
+  }
 }
 </script>
 

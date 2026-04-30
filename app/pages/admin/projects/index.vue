@@ -36,6 +36,8 @@ onMounted(async () => {
 const { reveal: showDeleteConfirm, isRevealed: isDeleteRevealed, confirm: dialogConfirm, cancel: dialogCancel } = useConfirmDialog()
 const dialogMessage = ref('')
 const deleteTarget = ref<Record<string, any> | null>(null)
+const isDeleting = ref(false)
+const deletingProjectId = ref<string | null>(null)
 
 function projectStatusClass(status: string): string {
   if (status === 'published')
@@ -66,8 +68,16 @@ async function deleteProject(project: Record<string, any>) {
   dialogMessage.value = `Are you sure you want to delete "${project.title}"?`
   const { isCanceled } = await showDeleteConfirm()
   if (!isCanceled && deleteTarget.value) {
-    await adminProjectStore.deleteProject(deleteTarget.value)
-    deleteTarget.value = null
+    isDeleting.value = true
+    deletingProjectId.value = deleteTarget.value._id
+    try {
+      await adminProjectStore.deleteProject(deleteTarget.value)
+      deleteTarget.value = null
+    }
+    finally {
+      isDeleting.value = false
+      deletingProjectId.value = null
+    }
   }
 }
 </script>
@@ -113,9 +123,12 @@ async function deleteProject(project: Record<string, any>) {
                       class="tile-overlay-text has-text-danger"
                       role="button"
                       tabindex="0"
+                      :class="{ 'is-loading': isDeleting && deletingProjectId === project._id }"
                       @click="deleteProject(project)"
                       @keyup.enter="deleteProject(project)"
-                    >Delete Project</span>
+                    >
+                      {{ isDeleting && deletingProjectId === project._id ? 'Deleting...' : 'Delete Project' }}
+                    </span>
                   </div>
                   <div class="columns">
                     <div class="column is-narrow">

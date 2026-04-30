@@ -31,6 +31,8 @@ const activeComponentRef = ref<any>(null)
 const projectHero = reactive<Record<string, any>>({})
 const generatedSlug = ref('')
 const isGeneratingSlug = ref(false)
+const isSaving = ref(false)
+const isCreatingHero = ref(false)
 
 function activeComponentClass(step: number) {
   return activeStep.value === step ? 'is-active' : ''
@@ -81,6 +83,10 @@ function handleProjectUpdate({ value, field }: { value: any, field: string }) {
 }
 
 async function updateProject() {
+  if (isSaving.value)
+    return
+  
+  isSaving.value = true
   try {
     await adminProjectStore.updateProject()
     // After successful update, refetch the project to get the latest data from server
@@ -99,12 +105,21 @@ async function updateProject() {
     console.error('Failed to update project:', error)
     // Error is already handled in the store
   }
+  finally {
+    isSaving.value = false
+  }
 }
 
 async function createProjectHero({ closeModal }: { closeModal: () => void }) {
-  const heroData = { ...projectHero, product: { ...project.value } }
-  await heroesStore.createHero(heroData)
-  closeModal()
+  isCreatingHero.value = true
+  try {
+    const heroData = { ...projectHero, product: { ...project.value } }
+    await heroesStore.createHero(heroData)
+    closeModal()
+  }
+  finally {
+    isCreatingHero.value = false
+  }
 }
 
 function applyProjectValues() {
@@ -125,9 +140,15 @@ function handleStatusChange(event: Event) {
 
 async function publishProject({ closeModal }: { closeModal: () => void }) {
   adminProjectStore.setProjectValue('status', 'published')
-  await adminProjectStore.updateProject()
-  closeModal()
-  await router.push('/admin/projects')
+  isSaving.value = true
+  try {
+    await adminProjectStore.updateProject()
+    closeModal()
+    await router.push('/admin/projects')
+  }
+  finally {
+    isSaving.value = false
+  }
 }
 </script>
 
@@ -137,12 +158,13 @@ async function publishProject({ closeModal }: { closeModal: () => void }) {
       <template #actionMenu>
         <div class="full-page-takeover-header-button">
           <button
-            :disabled="!canUpdateProject"
+            :disabled="!canUpdateProject || isSaving"
             class="button is-primary"
+            :class="{ 'is-loading': isSaving }"
             @click="updateProject"
             @keyup.enter="updateProject"
           >
-            Save
+            {{ isSaving ? 'Saving...' : 'Save' }}
           </button>
         </div>
 
@@ -151,6 +173,7 @@ async function publishProject({ closeModal }: { closeModal: () => void }) {
             open-title="Favorite"
             open-btn-class="button is-info"
             title="Make Project Hero"
+            :is-loading="isCreatingHero"
             @opened="applyProjectValues"
             @submitted="createProjectHero"
           >

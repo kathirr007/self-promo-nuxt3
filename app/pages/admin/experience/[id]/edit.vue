@@ -16,6 +16,7 @@ const isSaving = computed(() => adminExperienceStore.isSaving)
 const publishError = ref('')
 const slug = ref('')
 const isGeneratingSlug = ref(false)
+const isPublishing = ref(false)
 const editorRef = ref<any>(null)
 
 function getCurrentUrl(): string {
@@ -32,10 +33,16 @@ async function updateExperienceStatus({ closeModal }: { closeModal: () => void }
   const content = editorRef.value?.getContent?.() ?? {}
   content.status = status
   const message = status === 'published' ? 'Experience has been published!' : 'Experience has been un-published!'
-  await adminExperienceStore.updateExperience(route.params.id as string, content)
-  closeModal()
-  if (status === 'published')
-    await router.push('/admin/experiences')
+  isPublishing.value = true
+  try {
+    await adminExperienceStore.updateExperience(route.params.id as string, content)
+    closeModal()
+    if (status === 'published')
+      await router.push('/admin/experiences')
+  }
+  finally {
+    isPublishing.value = false
+  }
 }
 
 async function checkExperienceValidity() {
@@ -87,6 +94,7 @@ function initExperienceContent(editor: any) {
             open-title="Publish"
             open-btn-class="button is-success"
             title="Review Details"
+            :is-loading="isPublishing"
             @opened="checkExperienceValidity"
             @submitted="updateExperienceStatus($event, 'published')"
           >
@@ -127,6 +135,7 @@ function initExperienceContent(editor: any) {
             open-title="Unpublish"
             open-btn-class="button is-warning"
             title="Unpublish Experience"
+            :is-loading="isPublishing"
             @submitted="updateExperienceStatus($event, 'active')"
           >
             <div>

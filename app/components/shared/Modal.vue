@@ -7,6 +7,7 @@ interface Props {
   openBtnClass?: string
   showButton?: boolean
   isDisabled?: boolean
+  isLoading?: boolean
 }
 
 withDefaults(defineProps<Props>(), {
@@ -17,6 +18,7 @@ withDefaults(defineProps<Props>(), {
   openBtnClass: 'button',
   showButton: true,
   isDisabled: false,
+  isLoading: false,
 })
 
 const emit = defineEmits<{
@@ -73,13 +75,24 @@ defineExpose({
           </div>
         </section>
         <footer class="modal-card-foot">
-          <button :disabled="isDisabled" class="button is-success m-r-md" @click="emitAction">
-            {{ actionTitle }}
+          <button
+            :disabled="isDisabled || isLoading"
+            class="button is-success m-r-md"
+            :class="{ 'is-loading': isLoading }"
+            @click="emitAction"
+          >
+            {{ isLoading ? 'Processing...' : actionTitle }}
           </button>
-          <button v-if="removeActionTitle" class="button is-danger" @click="emitDeleteAction">
-            {{ removeActionTitle }}
+          <button
+            v-if="removeActionTitle"
+            :disabled="isLoading"
+            class="button is-danger m-r-md"
+            :class="{ 'is-loading': isLoading }"
+            @click="emitDeleteAction"
+          >
+            {{ isLoading ? 'Processing...' : removeActionTitle }}
           </button>
-          <button class="button" @click="isOpen = false">
+          <button class="button" :disabled="isLoading" @click="isOpen = false">
             Cancel
           </button>
         </footer>

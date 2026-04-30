@@ -34,6 +34,9 @@ onMounted(async () => {
 
 const canProceed = ref(false)
 const form = reactive({ title: '' })
+const isCreating = ref(false)
+const isDeleting = ref(false)
+const deletingCategoryId = ref<string | null>(null)
 
 // Confirmation dialog using VueUse
 const { reveal: showDeleteConfirm, isRevealed: isDeleteRevealed, confirm: dialogConfirm, cancel: dialogCancel } = useConfirmDialog()
@@ -46,9 +49,15 @@ function mergeFormData({ data, isValid }: { data: { title: string }, isValid: bo
 }
 
 async function createCategory() {
-  await categoryStore.createCategory2({ name: form.title })
-  const input = document.querySelector<HTMLInputElement>('.pos-rel input')
-  input?.focus()
+  isCreating.value = true
+  try {
+    await categoryStore.createCategory2({ name: form.title })
+    const input = document.querySelector<HTMLInputElement>('.pos-rel input')
+    input?.focus()
+  }
+  finally {
+    isCreating.value = false
+  }
 }
 
 async function deleteCategory(category: Record<string, any>) {
@@ -56,8 +65,16 @@ async function deleteCategory(category: Record<string, any>) {
   dialogMessage.value = `Are you sure you want to delete "${category.name}"?`
   const { isCanceled } = await showDeleteConfirm()
   if (!isCanceled && deleteTarget.value) {
-    await categoryStore.deleteCategory(deleteTarget.value)
-    deleteTarget.value = null
+    isDeleting.value = true
+    deletingCategoryId.value = deleteTarget.value._id
+    try {
+      await categoryStore.deleteCategory(deleteTarget.value)
+      deleteTarget.value = null
+    }
+    finally {
+      isDeleting.value = false
+      deletingCategoryId.value = null
+    }
   }
 }
 </script>
@@ -96,7 +113,16 @@ async function deleteCategory(category: Record<string, any>) {
                 {{ i + 1 }}. {{ category.name }}
                 <span class="tags is-pulled-right">
                   <NuxtLink class="tag is-info" :to="`/admin/category/${category._id}`" role="button" tabindex="0">Update</NuxtLink>
-                  <span class="tag is-danger" role="button" tabindex="0" @click="deleteCategory(category)" @keyup.enter="deleteCategory(category)">Delete</span>
+                  <span 
+                    class="tag is-danger" 
+                    role="button" 
+                    tabindex="0" 
+                    :class="{ 'is-loading': isDeleting && deletingCategoryId === category._id }"
+                    @click="deleteCategory(category)" 
+                    @keyup.enter="deleteCategory(category)"
+                  >
+                    {{ isDeleting && deletingCategoryId === category._id ? 'Deleting...' : 'Delete' }}
+                  </span>
                 </span>
               </li>
             </TransitionGroup>
