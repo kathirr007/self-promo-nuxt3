@@ -95,7 +95,7 @@ export default defineNuxtConfig({
     S3_BUCKET_NAME: process.env.S3_BUCKET_NAME,
     AWS_REGION: process.env.AWS_REGION,
     public: {
-      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || process.env.BASE_URL || 'http://localhost:3600',
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || process.env.BASE_URL || 'http://localhost:3400',
       googleClientId: process.env.GOOGLE_CLIENT_ID,
     },
   },
